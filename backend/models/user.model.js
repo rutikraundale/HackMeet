@@ -55,7 +55,22 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    isTeamLeader: {
+        type: Boolean,
+        default: false
+    },
+    teamId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Team",
+        required: false
+    },
+    invitations:{
+        type:[mongoose.Schema.Types.ObjectId],
+        ref:"Team",
+        required:false
+    },
     
+        
     
 }, { timestamps: true });
 
