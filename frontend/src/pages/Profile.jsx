@@ -1,149 +1,156 @@
 import React, { useState } from "react";
-import { Edit, Trash2, Save, X } from "lucide-react";
+import { Users, Mail, Check, X } from "lucide-react";
 
 const Profile = () => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
 
-  const [user, setUser] = useState({
+
+  const user = {
     name: "Ravi Sahane",
-    email: "ravi@example.com",
-    phone: "+91 9876543210",
-    skills: ["React", "Node.js", "MongoDB"],
-  });
-
-  const [formData, setFormData] = useState(user);
-
-  const handleEdit = () => {
-    setIsEditing(true);
+    email: "ravi.sahane@hackmeet.io",
+    bio: "Full-stack developer with a passion for building scalable architecture and AI-driven tools.",
+    skills: ["React", "Node.js", "MongoDB", "Express", "Java", "Python"],
   };
-
-  const handleSave = () => {
-    setUser(formData);
-    setIsEditing(false);
-  };
-
-  const handleDelete = () => {
-    console.log("Delete profile");
-    // 👉 connect Firebase delete here
-  };
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
+const handleReject = (data) => {
+  console.log("Invitation rejected",data);
+}
+const handleAccept = (data) => {
+  console.log("Invitation accepted",data);
+}
   return (
-    <div className="min-h-screen bg-slate-900 text-white px-4 py-6 flex justify-center">
+    <div className=" p-6 bg-gray-950 min-h-screen text-white">
       
-      <div className="w-full max-w-4xl space-y-6">
+      {/* Tabs */}
+      <div className="flex gap-8 border-b border-slate-700 mb-6">
+        <button
+          onClick={() => setActiveTab("profile")}
+          className={`pb-3 ${
+            activeTab === "profile"
+              ? "border-b-2 border-blue-500 text-blue-400"
+              : "text-gray-400"
+          }`}
+        >
+          👤 User Profile
+        </button>
 
-        {/* Header */}
-        <div className="flex justify-between items-center border-b border-slate-700 pb-4">
-          <h1 className="text-2xl font-bold">My Profile</h1>
+        <button
+          onClick={() => setActiveTab("team")}
+             className={`pb-3 ${
+            activeTab === "team"
+              ? "border-b-2 border-blue-500 text-blue-400"
+              : "text-gray-400"
+          }`}
+        >
+          👥 Your Team
+        </button>
 
-          <div className="flex gap-3">
-            {!isEditing ? (
-              <>
-                <button
-                  onClick={handleEdit}
-                  className="flex items-center gap-2 bg-blue-500 px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  <Edit size={16} /> Edit
-                </button>
+        <button
+          onClick={() => setActiveTab("invite")}
+          className={`pb-3 ${
+            activeTab === "invite"
+              ? "border-b-2 border-blue-500 text-blue-400"
+              : "text-gray-400"
+          }`}
+        >
+          ✉️ Invitations
+        </button>
+      </div>
 
-                <button
-                  onClick={handleDelete}
-                  className="flex items-center gap-2 bg-red-500 px-4 py-2 rounded hover:bg-red-600"
-                >
-                  <Trash2 size={16} /> Delete
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={handleSave}
-                  className="flex items-center gap-2 bg-green-500 px-4 py-2 rounded hover:bg-green-600"
-                >
-                  <Save size={16} /> Save
-                </button>
-
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="flex items-center gap-2 bg-gray-600 px-4 py-2 rounded hover:bg-gray-700"
-                >
-                  <X size={16} /> Cancel
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Profile Card */}
-        <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 grid md:grid-cols-2 gap-6">
-
-          {/* Name */}
-          <div>
-            <label className="text-xs text-gray-400">Full Name</label>
-            {isEditing ? (
-              <input
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full mt-1 px-3 py-2 bg-slate-900 border border-slate-600 rounded"
-              />
-            ) : (
-              <p className="mt-1">{user.name}</p>
-            )}
-          </div>
-
-          {/* Phone */}
-          <div>
-            <label className="text-xs text-gray-400">Phone</label>
-            {isEditing ? (
-              <input
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full mt-1 px-3 py-2 bg-slate-900 border border-slate-600 rounded"
-              />
-            ) : (
-              <p className="mt-1">{user.phone}</p>
-            )}
-          </div>
-
-          {/* Email */}
-          <div className="md:col-span-2">
-            <label className="text-xs text-gray-400">Email</label>
-            {isEditing ? (
-              <input
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full mt-1 px-3 py-2 bg-slate-900 border border-slate-600 rounded"
-              />
-            ) : (
-              <p className="mt-1">{user.email}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Skills Section */}
+      <div className="grid md:grid-cols-3 gap-6">
+        
+        {/* LEFT PROFILE CARD */}
         <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
-          <h3 className="text-sm text-gray-400 mb-4">
-            SKILLS
-          </h3>
+          <div className="flex flex-col items-center text-center">
+            
+            <img
+              src=""
+              alt="profile"
+              className="w-24 h-24 rounded-lg mb-4"
+            />
 
-          <div className="flex flex-wrap gap-2">
-            {user.skills.map((skill, i) => (
-              <span
-                key={i}
-                className="bg-slate-700 px-3 py-1 rounded-full text-sm"
-              >
-                {skill}
-              </span>
-            ))}
+            <h2 className="text-xl font-bold">{user.name}</h2>
+            <p className="text-gray-400 text-sm">{user.email}</p>
+
+            <p className="text-gray-400 text-sm mt-4">
+              {user.bio}
+            </p>
+          </div>
+
+          {/* Skills */}
+          <div className="mt-6">
+            <h4 className="text-xs text-gray-400 mb-3 tracking-widest">
+              TECHNICAL ARSENAL
+            </h4>
+
+            <div className="flex flex-wrap gap-2">
+              {user.skills.map((skill, i) => (
+                <span
+                  key={i}
+                  className="bg-slate-700 px-3 py-1 rounded text-sm"
+                >
+                  {skill}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
+        {/* RIGHT SIDE */}
+        <div className="md:col-span-2 space-y-6">
+
+          {/* CURRENT PROJECT */}
+          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
+            <p className="text-xs text-gray-400 mb-2">
+              CURRENT DEPLOYMENT
+            </p>
+
+            <h3 className="text-lg font-semibold">
+              Team Syntax
+            </h3>
+            <p className="text-gray-400 text-sm mb-4">
+              Web3 Global Build Hackathon
+            </p>
+
+            {/* Progress Bar */}
+            <div className="bg-slate-900 rounded-full h-3">
+              <div className="bg-blue-500 h-3 rounded-full w-[0]"></div>
+            </div>
+            <p className="text-right text-sm mt-1 text-gray-400">
+              0%
+            </p>
+          </div>
+
+          {/* INVITATIONS */}
+          <div>
+            <h3 className="text-gray-300 mb-3">
+              Pending Invitations
+            </h3>
+
+            {/* Card 1 */}
+            <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex justify-between items-center mb-3">
+              <div>
+                <h4 className="font-semibold">Cloud Mavericks</h4>
+                <p className="text-gray-400 text-sm">
+                  Data Mesh Summit
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <button className="px-4 py-1 bg-slate-700 rounded hover:bg-slate-600"
+                      onClick={handleReject}>
+                  Reject
+                </button>
+                <button className="px-4 py-1 bg-blue-500 rounded hover:bg-blue-600"
+                    onClick={handleAccept}>
+                  Accept
+                </button>
+              </div>
+            </div>
+
+          
+          </div>
+
+        </div>
       </div>
     </div>
   );

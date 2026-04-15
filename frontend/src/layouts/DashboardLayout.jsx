@@ -12,7 +12,7 @@ const DashboardLayout = ({ children }) => {
       <Sidebar />
       
       {/* Page Content with margin to account for fixed sidebar */}
-      <div className="flex-1 overflow-y-auto bg-gray-950 ml-[20%]">
+      <div className="flex-1 overflow-y-auto bg-gray-950 ml-[17%]">
         {children}
       </div>
     </div>

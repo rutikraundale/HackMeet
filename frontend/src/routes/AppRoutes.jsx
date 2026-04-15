@@ -5,6 +5,7 @@ import Dashboard from "../pages/Dashboard";
 import Profile from "../pages/profile";
 import UsersProfile from "../pages/UsersProfile";
 import DashboardLayout from "../layouts/DashboardLayout";
+import Message from "../pages/Message";
 
 const AppRoutes = () => {
   return (
@@ -32,6 +33,14 @@ const AppRoutes = () => {
         element={
           <DashboardLayout>
             <UsersProfile />
+          </DashboardLayout>
+        }
+      />
+      <Route
+        path="/messages"
+        element={
+          <DashboardLayout>
+            <Message />
           </DashboardLayout>
         }
       />
