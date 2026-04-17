@@ -5,11 +5,15 @@ import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
 import AppRoutes from './routes/AppRoutes'
+import { ToastProvider } from './context/ToastContext'
+
 function App() {
   
 
   return (
-    <AppRoutes/>
+    <ToastProvider>
+      <AppRoutes/>
+    </ToastProvider>
   
   )
 }

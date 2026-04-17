@@ -6,6 +6,11 @@ import Profile from "../pages/profile";
 import UsersProfile from "../pages/UsersProfile";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Message from "../pages/Message";
+import Teammates from "../pages/Teammates";
+import Discover from "../pages/Discover";
+import TeamBuilder from "../pages/TeamBuilder";
+import HackathonDetail from "../pages/HackathonDetail";
+import Projects from "../pages/Projects";
 
 const AppRoutes = () => {
   return (
@@ -29,7 +34,7 @@ const AppRoutes = () => {
         }
       />
       <Route
-        path="/users-profile"
+        path="/users-profile/:id"
         element={
           <DashboardLayout>
             <UsersProfile />
@@ -41,6 +46,54 @@ const AppRoutes = () => {
         element={
           <DashboardLayout>
             <Message />
+          </DashboardLayout>
+        }
+      />
+      <Route
+        path="/messages/:id"
+        element={
+          <DashboardLayout>
+            <Message/>
+          </DashboardLayout>
+        }
+      />
+      <Route
+        path="/projects"
+        element={
+          <DashboardLayout>
+            <Projects />
+          </DashboardLayout>
+        }
+      />
+      <Route
+        path="/teammates"
+        element={
+          <DashboardLayout>
+            <Teammates />
+          </DashboardLayout>
+        }
+      />
+      <Route
+        path="/discover"
+        element={
+          <DashboardLayout>
+            <Discover />
+          </DashboardLayout>
+        }
+      />
+      <Route
+        path="/team-builder"
+        element={
+          <DashboardLayout>
+            <TeamBuilder />
+          </DashboardLayout>
+        }
+      />
+      <Route
+        path="/hackathon/:id"
+        element={
+          <DashboardLayout>
+            <HackathonDetail />
           </DashboardLayout>
         }
       />

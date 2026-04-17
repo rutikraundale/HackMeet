@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { Bell, Settings, Search } from "lucide-react";
 import { UserIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
+import NotificationPanel from "./NotificationPanel";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const handleSearch = (e) => {
     setSearch(e.target.value);
@@ -43,12 +45,19 @@ const Navbar = () => {
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-6 relative">
         
         {/* Notification */}
-        <button className="p-2 rounded hover:bg-slate-800 transition">
-          <Bell className="w-5 h-5 text-gray-300 hover:text-white" />
-        </button>
+        <div className="relative">
+          <button 
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="p-2 rounded hover:bg-slate-800 transition relative group"
+          >
+            <Bell className="w-5 h-5 text-gray-300 hover:text-white" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          </button>
+          <NotificationPanel isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
+        </div>
 
         {/* Settings */}
         <button className="p-2 rounded hover:bg-slate-800 transition">

@@ -1,16 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { useToast } from "../context/ToastContext";
 
 const ChatWindow = ({ user, messages, setMessages }) => {
   const [input, setInput] = useState("");
+  const { addToast } = useToast();
 
-  // ✅ STEP 4: Filter messages for selected user
+
   const filteredMessages = messages.filter(
     (msg) =>
       (msg.sender === "me" && msg.receiver === user.id) ||
       (msg.sender === user.id && msg.receiver === "me")
   );
 
-  // ✅ STEP 5: Send message
+
   const sendMessage = () => {
     if (!input.trim()) return;
 
@@ -22,18 +24,24 @@ const ChatWindow = ({ user, messages, setMessages }) => {
     };
 
     setMessages([...messages, newMsg]); // add message globally
+    addToast("Message sent!", "success");
     setInput("");
   };
+
+    const inputRef = useRef(null);
+    useEffect(() => {
+     inputRef.current?.focus();
+    }, [user]); 
 
   return (
     <div className="flex flex-col h-full">
 
-      {/* 🔝 HEADER */}
+
       <div className="border-b border-gray-700 p-3 text-lg font-semibold">
         {user.name}
       </div>
 
-      {/* 💬 MESSAGES */}
+
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {filteredMessages.length === 0 ? (
           <p className="text-gray-400 text-center">No messages yet</p>
@@ -63,9 +71,10 @@ const ChatWindow = ({ user, messages, setMessages }) => {
         )}
       </div>
 
-      {/* ✏️ INPUT */}
+    
       <div className=" p-3  flex  border border-gray-600 ">
         <input
+          ref={inputRef}
           type="text"
           placeholder="Type message..."
           value={input}
