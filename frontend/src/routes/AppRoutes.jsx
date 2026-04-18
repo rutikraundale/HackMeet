@@ -15,10 +15,10 @@ import Projects from "../pages/Projects";
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<SignUp />} />
+      <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<SignIn />} />
       <Route
-        path="/dashboard"
+        path="/"
         element={
           <DashboardLayout>
             <Dashboard />

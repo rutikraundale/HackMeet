@@ -1,7 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useCallback } from "react";
 
-// Context for toast notifications - used alongside toastUtils for backward compatibility
 const ToastContext = createContext();
 
 export const useToast = () => {
@@ -13,24 +12,28 @@ export const useToast = () => {
 };
 
 export const ToastProvider = ({ children }) => {
-  const [, setToasts] = useState([]);
+  const [toasts, setToasts] = useState([]);
 
   const removeToast = useCallback((id) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const addToast = useCallback(() => {
-    const idNum = Math.random();
-    const id = `toast-${idNum}`;
-    
-    // Auto remove after duration + animation time
-    setTimeout(() => {
-      removeToast(id);
-    }, 3300);
-  }, [removeToast]);
+  const addToast = useCallback(
+    (message, type = "info", duration = 3000) => {
+      const id = `toast-${Date.now()}-${Math.random()}`;
+      setToasts((prev) => [...prev, { id, message, type }]);
+
+      setTimeout(() => {
+        removeToast(id);
+      }, duration);
+
+      return id;
+    },
+    [removeToast]
+  );
 
   return (
-    <ToastContext.Provider value={{ addToast, removeToast }}>
+    <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
       {children}
     </ToastContext.Provider>
   );
