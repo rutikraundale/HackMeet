@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import generateTokensAndSetCookies from "../utils/generateTokens.js";
+import { uploadToCloudinary } from "../utils/cloudinary.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  POST /api/auth/signup
@@ -192,6 +193,85 @@ export const getMe = async (req, res) => {
         });
     } catch (error) {
         console.error("[getMe]", error);
+        return res.status(500).json({ success: false, message: "Internal server error." });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  PUT /api/auth/profile   (protected – requires verifyAccessToken middleware)
+// ─────────────────────────────────────────────────────────────────────────────
+export const updateProfile = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const {
+            bio,
+            college,
+            skills,
+            projects,
+            hackathonsParticipated,
+            hackathonsWon,
+            codingPlatforms,
+            socialLinks
+        } = req.body;
+
+        let profilePictureUrl = req.user.profilePicture;
+
+        // Extract image from req.file and upload it
+        if (req.file) {
+            try {
+                profilePictureUrl = await uploadToCloudinary(req.file.buffer);
+            } catch (error) {
+                return res.status(500).json({ success: false, message: "Image upload failed: " + error.message });
+            }
+        }
+
+        // Helper to parse potential stringified JSON arrays from FormData
+        const parseArray = (field) => {
+            if (field === undefined || field === null) return [];
+            if (Array.isArray(field)) return field;
+            if (typeof field === 'object') return Object.values(field).map(String);
+            if (typeof field !== 'string') return [String(field)];
+            
+            try {
+                const parsed = JSON.parse(field);
+                return Array.isArray(parsed) ? parsed.map(String) : [String(parsed)];
+            } catch (e) {
+                // Return as an array with a single string entry if it's just a comma-separated string or normal string
+                return field.split(',').map(item => item.trim());
+            }
+        };
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {
+                $set: {
+                    bio,
+                    college,
+                    skills: parseArray(skills),
+                    projects: parseArray(projects),
+                    hackathonsParticipated: parseArray(hackathonsParticipated),
+                    hackathonsWon: parseArray(hackathonsWon),
+                    codingPlatforms: parseArray(codingPlatforms),
+                    socialLinks: parseArray(socialLinks),
+                    profilePicture: profilePictureUrl,
+                    isProfileCompleted: true // Mark profile as completed
+                }
+            },
+            { new: true, runValidators: true }
+        ).select("-password");
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile updated successfully.",
+            user: updatedUser
+        });
+
+    } catch (error) {
+        console.error("[updateProfile]", error);
         return res.status(500).json({ success: false, message: "Internal server error." });
     }
 };
