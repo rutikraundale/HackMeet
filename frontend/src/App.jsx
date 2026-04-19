@@ -1,13 +1,20 @@
+
+
 import './App.css'
+import Navbar from './components/Navbar'
+import Sidebar from './components/Sidebar'
+import Dashboard from './pages/Dashboard'
+import AppRoutes from './routes/AppRoutes'
+import { ToastProvider } from './context/ToastContext'
 
 function App() {
   
 
   return (
-    <>
-      <h1>Campus Share</h1>
-      <p>Share your physical and digital resources</p>
-    </>
+    <ToastProvider>
+      <AppRoutes/>
+    </ToastProvider>
+  
   )
 }
 
