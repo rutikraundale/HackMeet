@@ -1,33 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Check, X, Mail } from "lucide-react";
-
-// Mock data — replace with real API data when backend is ready
-const MOCK_INVITATIONS = [
-  {
-    id: "inv1",
-    teamName: "Cloud Mavericks",
-    hackathon: "Data Mesh Summit",
-    sender: "Alex Johnson",
-  },
-  {
-    id: "inv2",
-    teamName: "Neural Ninjas",
-    hackathon: "AI Agent Workshop",
-    sender: "Priya Nair",
-  },
-];
+import { useAuth } from "../../context/AuthContext";
+import { post } from "../../utils/api";
 
 const InviteTab = ({ onAccept, onReject }) => {
-  const [invitations, setInvitations] = useState(MOCK_INVITATIONS);
+  const { user, checkAuth } = useAuth();
+  const [invitations, setInvitations] = useState([]);
 
-  const handleAccept = (inv) => {
-    onAccept(inv.teamName);
-    setInvitations((prev) => prev.filter((i) => i.id !== inv.id));
+  useEffect(() => {
+    if (user?.invitations) {
+      setInvitations(user.invitations);
+    }
+  }, [user]);
+
+  const handleAccept = async (inv) => {
+    try {
+      await post(`/teams/accept-invite/${inv._id}`);
+      onAccept(inv.teamName);
+      await checkAuth(); // Refresh user data to get the new teamId
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleReject = (inv) => {
-    onReject(inv.teamName);
-    setInvitations((prev) => prev.filter((i) => i.id !== inv.id));
+  const handleReject = async (inv) => {
+    try {
+      await post(`/teams/decline-invite/${inv._id}`);
+      onReject(inv.teamName);
+      await checkAuth(); // Refresh user data to remove the invitation
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -52,13 +55,13 @@ const InviteTab = ({ onAccept, onReject }) => {
       ) : (
         invitations.map((inv) => (
           <div
-            key={inv.id}
+            key={inv._id}
             className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center justify-between hover:border-slate-600 transition"
           >
             <div>
               <h4 className="font-semibold text-white">{inv.teamName}</h4>
-              <p className="text-gray-400 text-sm">{inv.hackathon}</p>
-              <p className="text-gray-500 text-xs mt-0.5">Invited by {inv.sender}</p>
+              <p className="text-gray-400 text-sm">{inv.hackathonId?.name || "Unknown Hackathon"}</p>
+              <p className="text-gray-500 text-xs mt-0.5">Invited by {inv.teamLeader?.username || "Unknown Sender"}</p>
             </div>
 
             <div className="flex gap-2 shrink-0">

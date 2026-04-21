@@ -26,7 +26,7 @@ const AdminTeamCard = ({ team }) => {
 
   // Safely read nested fields with fallback values
   const hackName = team.hackathonId?.name ?? "—";
-  const leaderName = team.teamLeader?.name ?? "Unknown";
+  const leaderName = team.teamLeader?.username || team.teamLeader?.name || "Unknown";
   const memberCount = team.members?.length ?? 0;
 
   return (
@@ -95,13 +95,13 @@ const AdminTeamCard = ({ team }) => {
                   {/* Member avatar */}
                   <div
                     className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                    style={{ backgroundColor: getColor(m.name) }}
+                    style={{ backgroundColor: getColor(m.username || m.name) }}
                   >
-                    {getInitials(m.name)}
+                    {getInitials(m.username || m.name)}
                   </div>
-                  <span className="text-gray-300 text-sm">{m.name}</span>
+                  <span className="text-gray-300 text-sm">{m.username || m.name}</span>
                   {/* Crown emoji for the team leader */}
-                  {m.name === leaderName && (
+                  {(m.username || m.name) === leaderName && (
                     <span className="text-xs text-yellow-400">👑</span>
                   )}
                 </div>

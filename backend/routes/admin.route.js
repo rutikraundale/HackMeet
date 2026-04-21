@@ -1,5 +1,5 @@
 import express from "express";
-import { createHackathon, getHackathonsSegmented } from "../controllers/admin.controller.js";
+import { createHackathon, getHackathonsSegmented, getAllTeams } from "../controllers/admin.controller.js";
 import verifyAccessToken from "../middleware/verifyToken.js";
 import verifyAdmin from "../middleware/verifyAdmin.js";
 
@@ -11,5 +11,6 @@ router.use(verifyAdmin);
 
 router.post("/hackathons", createHackathon);
 router.get("/hackathons", getHackathonsSegmented);
+router.get("/teams", getAllTeams);
 
 export default router;

@@ -1,15 +1,33 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const { addToast } = useToast();
+  const navigate = useNavigate();
 
-  const handleSignIn = (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    const userData = { email, password };
-    console.log(userData);
+    if (!email || !password) {
+      addToast("Please fill in all fields", "error");
+      return;
+    }
+    setLoading(true);
+    try {
+      await login({ email, password });
+      addToast("Logged in successfully! 🚀", "success");
+      navigate("/dashboard");
+    } catch (err) {
+      addToast(err.message || "Login failed", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,7 +48,6 @@ const SignIn = () => {
         
         {/* Container */}
        <div className="w-full max-w-xl mx-auto bg-gray-900 p-8 rounded-xl border border-gray-800">
-
 
           {/* Title */}
           <h1 className="text-3xl font-bold mb-3">
@@ -97,16 +114,17 @@ const SignIn = () => {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full bg-blue-400 hover:bg-blue-500 text-slate-900 font-bold py-3 rounded-lg transition text-lg"
+              disabled={loading}
+              className="w-full bg-blue-400 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 font-bold py-3 rounded-lg transition text-lg"
             >
-              SIGN IN →
+              {loading ? "SIGNING IN..." : "SIGN IN →"}
             </button>
 
           </form>
 
           {/* Footer */}
           <div className="flex justify-center gap-6 text-xs text-gray-500 mt-8 pt-4 border-t border-gray-700 flex-wrap">
-            <Link to="/" className="hover:text-gray-300 transition">
+            <Link to="/signup" className="hover:text-gray-300 transition">
               CREATE NEW ACCOUNT
             </Link>
             <a href="#!" className="hover:text-gray-300 transition">

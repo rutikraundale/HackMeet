@@ -1,30 +1,52 @@
-import React from "react";
-import { Heart, MessageCircle, ArrowLeft } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { MessageCircle, ArrowLeft } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
-
-const MY_SKILLS = ["React", "Node.js", "MongoDB", "JavaScript"];
-
-const developers = {
-  "1": { id: "1", name: "Sarah Chen", role: "Senior Full Stack Dev", location: "San Francisco, CA", bio: "Architecting robust digital experiences with the MERN stack. Passionate about clean code, scalable systems, and collaborative hackathon environments.", skills: ["Java", "JavaScript", "React", "Node.js", "MongoDB"], links: [{ name: "GitHub", url: "https://github.com" }, { name: "LinkedIn", url: "https://linkedin.com" }, { name: "LeetCode", url: "https://leetcode.com" }], stats: { wins: 24, rank: "Top 5%" }, status: "open" },
-  "2": { id: "2", name: "Marcus Kim", role: "ML Engineer", location: "Seoul, South Korea", bio: "Building AI-powered solutions using the latest LLM frameworks. Specializing in NLP and computer vision pipelines.", skills: ["Python", "TensorFlow", "Docker", "AWS"], links: [{ name: "GitHub", url: "https://github.com" }, { name: "LinkedIn", url: "https://linkedin.com" }], stats: { wins: 12, rank: "Top 15%" }, status: "open" },
-  "3": { id: "3", name: "Priya Nair", role: "Frontend Developer", location: "Bangalore, India", bio: "Crafting pixel-perfect UIs with React and Vue. Strong focus on accessibility, performance, and design systems.", skills: ["React", "Vue", "CSS", "Figma"], links: [{ name: "GitHub", url: "https://github.com" }, { name: "LinkedIn", url: "https://linkedin.com" }], stats: { wins: 8, rank: "Top 20%" }, status: "open" },
-  "4": { id: "4", name: "Jordan Lee", role: "Backend Engineer", location: "London, UK", bio: "Designing high-performance APIs and distributed systems. Expert in PostgreSQL, Redis, and microservices.", skills: ["Node.js", "PostgreSQL", "Redis", "Docker"], links: [{ name: "GitHub", url: "https://github.com" }, { name: "LinkedIn", url: "https://linkedin.com" }], stats: { wins: 16, rank: "Top 10%" }, status: "busy" },
-  "5": { id: "5", name: "Aisha Patel", role: "DevOps Engineer", location: "Dubai, UAE", bio: "Cloud infrastructure expert with deep experience in AWS, Kubernetes, and CI/CD pipelines at scale.", skills: ["AWS", "Kubernetes", "Terraform", "CI/CD"], links: [{ name: "GitHub", url: "https://github.com" }, { name: "LinkedIn", url: "https://linkedin.com" }], stats: { wins: 6, rank: "Top 25%" }, status: "open" },
-  "6": { id: "6", name: "Lucas Berg", role: "Blockchain Dev", location: "Berlin, Germany", bio: "Smart contract developer building the decentralized future. Experienced in DeFi, NFTs, and Web3 tooling.", skills: ["Solidity", "Web3.js", "React", "Node.js"], links: [{ name: "GitHub", url: "https://github.com" }, { name: "LinkedIn", url: "https://linkedin.com" }], stats: { wins: 19, rank: "Top 8%" }, status: "busy" },
-  "7": { id: "7", name: "Mei Zhang", role: "Mobile Developer", location: "Shanghai, China", bio: "Cross-platform mobile specialist building with React Native and Flutter. Shipped 10+ apps to production.", skills: ["React Native", "Flutter", "Firebase", "iOS"], links: [{ name: "GitHub", url: "https://github.com" }, { name: "LinkedIn", url: "https://linkedin.com" }], stats: { wins: 11, rank: "Top 18%" }, status: "open" },
-  "8": { id: "8", name: "Omar Hassan", role: "Data Engineer", location: "Cairo, Egypt", bio: "Building robust data pipelines and analytics platforms. Expert in distributed computing and real-time data processing.", skills: ["Python", "Spark", "MongoDB", "Airflow"], links: [{ name: "GitHub", url: "https://github.com" }, { name: "LinkedIn", url: "https://linkedin.com" }], stats: { wins: 9, rank: "Top 22%" }, status: "busy" },
-};
-
-const calcCompatibility = (userSkills) => {
-  const common = userSkills.filter((s) => MY_SKILLS.includes(s));
-  return Math.round((common.length / Math.max(MY_SKILLS.length, 1)) * 100);
-};
+import { get } from "../utils/api";
+import { useAuth } from "../context/AuthContext";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 
 const UsersProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const profile = developers[id];
+  const mySkills = currentUser?.skills || [];
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const data = await get(`/users/${id}`);
+        setProfile(data.data);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, [id]);
+
+  const calcCompatibility = (userSkills) => {
+    if (!mySkills.length || !userSkills?.length) return 0;
+    const common = userSkills.filter((s) => mySkills.includes(s));
+    return Math.round((common.length / Math.max(mySkills.length, 1)) * 100);
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-950 min-h-screen text-white">
+        <div className="mb-6">
+          <div className="w-24 h-8 bg-slate-700 animate-pulse rounded mb-4"></div>
+        </div>
+        <div className="grid lg:grid-cols-3 gap-6">
+          <LoadingSkeleton variant="profile" />
+          <div className="lg:col-span-2"><LoadingSkeleton variant="card" /></div>
+        </div>
+      </div>
+    );
+  }
 
   if (!profile) {
     return (
@@ -41,11 +63,8 @@ const UsersProfile = () => {
   }
 
   const compatibility = calcCompatibility(profile.skills);
-
-  const handleAction = (type, data) => {
-    if (type === "CHAT") navigate(`/messages/${data.id}`);
-    if (type === "OPEN_LINK") window.open(data.url, "_blank");
-  };
+  const initials = (profile.username || "??").slice(0, 2).toUpperCase();
+  const isOpen = !profile.teamId;
 
   return (
     <div className="p-6 bg-gray-950 min-h-screen text-white">
@@ -62,22 +81,29 @@ const UsersProfile = () => {
 
         {/* PROFILE CARD */}
         <div className="bg-gray-900 p-6 rounded-xl border border-gray-800">
-          <div className="w-24 h-24 rounded-xl mb-4 bg-blue-900 flex items-center justify-center text-3xl font-bold text-blue-300">
-            {profile.name.split(" ").map((n) => n[0]).join("")}
-          </div>
+          {profile.profilePicture ? (
+            <img
+              src={profile.profilePicture}
+              alt={profile.username}
+              className="w-24 h-24 rounded-xl mb-4 object-cover"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-xl mb-4 bg-blue-900 flex items-center justify-center text-3xl font-bold text-blue-300">
+              {initials}
+            </div>
+          )}
 
-          <h2 className="text-xl font-bold">{profile.name}</h2>
-          <p className="text-blue-400">{profile.role}</p>
-          <p className="text-gray-400 text-sm mt-1"> {profile.location}</p>
+          <h2 className="text-xl font-bold">{profile.username}</h2>
+          <p className="text-blue-400">{profile.college || "Developer"}</p>
 
           {/* Status */}
           <div className="mt-2">
             <span className={`text-xs px-2 py-1 rounded-full ${
-              profile.status === "open"
+              isOpen
                 ? "bg-green-900/40 text-green-400"
                 : "bg-amber-900/40 text-amber-400"
             }`}>
-              {profile.status === "open" ? "✓ Open to team up" : " Busy"}
+              {isOpen ? "✓ Open to team up" : "In a team"}
             </span>
           </div>
 
@@ -96,25 +122,25 @@ const UsersProfile = () => {
           </div>
 
           <button
-            onClick={() => handleAction("CHAT", profile)}
+            onClick={() => navigate(`/messages/${profile._id}`)}
             className="mt-5 w-full bg-blue-600 py-2 rounded-lg hover:bg-blue-500 flex items-center justify-center gap-2 transition"
           >
             <MessageCircle size={16} />
-            Chat with {profile.name.split(" ")[0]}
+            Chat with {(profile.username || "").split(" ")[0]}
           </button>
         </div>
 
         {/* BIO CARD */}
         <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 lg:col-span-2">
-          <h2 className="text-lg font-semibold mb-2">Professional Brief</h2>
-          <p className="text-gray-400">{profile.bio}</p>
+          <h2 className="text-lg font-semibold mb-2">About</h2>
+          <p className="text-gray-400">{profile.bio || "No bio provided."}</p>
 
           <div className="flex gap-2 mt-4 flex-wrap">
-            {profile.skills.map((skill, i) => (
+            {(profile.skills || []).map((skill, i) => (
               <span
                 key={i}
                 className={`px-3 py-1 rounded text-sm ${
-                  MY_SKILLS.includes(skill)
+                  mySkills.includes(skill)
                     ? "bg-blue-900/40 text-blue-400"
                     : "bg-gray-800 text-gray-300"
                 }`}
@@ -126,29 +152,31 @@ const UsersProfile = () => {
         </div>
 
         {/* SOCIAL LINKS */}
-        <div className="bg-gray-900 p-6 rounded-xl border border-gray-800">
-          <h3 className="text-sm text-gray-400 mb-4 tracking-widest">SOCIAL & LINKS</h3>
-          {profile.links.map((link, i) => (
-            <div
-              key={i}
-              className="flex justify-between items-center mb-3 cursor-pointer hover:text-blue-400 transition"
-              onClick={() => handleAction("OPEN_LINK", link)}
-            >
-              <span>{link.name}</span>
-              <span>↗</span>
-            </div>
-          ))}
-        </div>
+        {(profile.socialLinks?.length > 0) && (
+          <div className="bg-gray-900 p-6 rounded-xl border border-gray-800">
+            <h3 className="text-sm text-gray-400 mb-4 tracking-widest">SOCIAL & LINKS</h3>
+            {profile.socialLinks.map((link, i) => (
+              <div
+                key={i}
+                className="flex justify-between items-center mb-3 cursor-pointer hover:text-blue-400 transition"
+                onClick={() => window.open(link, "_blank")}
+              >
+                <span className="text-sm truncate">{link}</span>
+                <span>↗</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* SKILLS GRID */}
-        <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 lg:col-span-2">
+        <div className={`bg-gray-900 p-6 rounded-xl border border-gray-800 ${profile.socialLinks?.length > 0 ? "lg:col-span-2" : "lg:col-span-3"}`}>
           <h3 className="text-sm text-gray-400 mb-4 tracking-widest">CORE STACK & COMPETENCIES</h3>
           <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
-            {profile.skills.map((skill, i) => (
+            {(profile.skills || []).map((skill, i) => (
               <div
                 key={i}
                 className={`p-4 rounded-lg text-center text-sm ${
-                  MY_SKILLS.includes(skill)
+                  mySkills.includes(skill)
                     ? "bg-blue-900/30 border border-blue-800 text-blue-300"
                     : "bg-gray-800 text-gray-300"
                 }`}
@@ -159,23 +187,13 @@ const UsersProfile = () => {
           </div>
         </div>
 
-
-        <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 flex flex-col justify-center items-center">
-          <h1 className="text-4xl font-bold">{profile.stats.wins}</h1>
-          <p className="text-gray-400 text-sm">Hackathons Won</p>
-          <div className="w-full bg-gray-800 h-2 rounded mt-4">
-            <div className="bg-blue-500 h-2 rounded w-3/4" />
-          </div>
-          <p className="text-xs text-gray-400 mt-2">Global {profile.stats.rank}</p>
-        </div>
-
-
-        <div className="bg-black p-6 rounded-xl border border-gray-800 lg:col-span-2 font-mono text-sm text-green-400">
+        {/* Code Block */}
+        <div className="bg-black p-6 rounded-xl border border-gray-800 lg:col-span-3 font-mono text-sm text-green-400">
 {`const developer = {
-  name: "${profile.name}",
-  focus: "${profile.role}",
-  status: "${profile.status === "open" ? "Open to Collaboration" : "Currently Busy"}",
-  location: "${profile.location.replace(", ", "_").replace(" ", "_").toUpperCase()}"
+  name: "${profile.username}",
+  focus: "${profile.college || "Developer"}",
+  status: "${isOpen ? "Open to Collaboration" : "Currently in a Team"}",
+  skills: [${(profile.skills || []).map(s => `"${s}"`).join(", ")}]
 };`}
         </div>
 

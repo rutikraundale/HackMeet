@@ -44,6 +44,31 @@ export const createTeam = async (req, res) => {
     }
 };
 
+// @desc    Get my team details
+// @route   GET /api/teams/my-team
+// @access  Private
+export const getMyTeam = async (req, res) => {
+    try {
+        const user = req.user;
+        if (!user.teamId) {
+            return res.status(404).json({ success: false, message: "You do not belong to a team yet." });
+        }
+        const team = await Team.findById(user.teamId)
+            .populate("members", "username email college profilePicture skills")
+            .populate("teamLeader", "username")
+            .populate("hackathonId", "name startDate endDate");
+
+        if (!team) {
+             return res.status(404).json({ success: false, message: "Team not found." });
+        }
+
+        res.status(200).json({ success: true, data: team });
+    } catch (error) {
+        console.error("Error fetching my team:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch team details" });
+    }
+};
+
 // @desc    Get recommended users based on matching skills
 // @route   GET /api/teams/recommendations
 // @access  Private (for Team Leaders)
@@ -61,7 +86,8 @@ export const getRecommendedUsers = async (req, res) => {
         const recommendedUsers = await User.find({
             _id: { $ne: user._id },
             $or: [{ teamId: { $exists: false } }, { teamId: null }],
-            skills: { $in: user.skills }
+            skills: { $in: user.skills },
+            isAdmin: { $ne: true }
         }).select("-password");
 
         res.status(200).json({

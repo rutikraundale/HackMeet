@@ -1,20 +1,18 @@
-
-
 import './App.css'
-import Navbar from './components/Navbar'
-import Sidebar from './components/Sidebar'
-import Dashboard from './pages/Dashboard'
 import AppRoutes from './routes/AppRoutes'
 import { ToastProvider } from './context/ToastContext'
+import { AuthProvider } from './context/AuthContext'
+import { SocketProvider } from './context/SocketContext'
 
 function App() {
-  
-
   return (
-    <ToastProvider>
-      <AppRoutes/>
-    </ToastProvider>
-  
+    <AuthProvider>
+      <SocketProvider>
+        <ToastProvider>
+          <AppRoutes />
+        </ToastProvider>
+      </SocketProvider>
+    </AuthProvider>
   )
 }
 

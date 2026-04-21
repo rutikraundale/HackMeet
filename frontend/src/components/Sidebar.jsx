@@ -6,9 +6,11 @@ import { MdMessage, MdPerson, MdPeopleOutline } from "react-icons/md";
 import { HiOutlineUserGroup } from "react-icons/hi";
 import { RiCompassDiscoverLine } from "react-icons/ri";
 import { Shield } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const Sidebar = () => {
   const location = useLocation();
+  const { user } = useAuth();
 
   const activeClass =
     "flex items-center gap-4 px-4 py-3 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30";
@@ -23,7 +25,7 @@ const Sidebar = () => {
     { to: "/projects", icon: <FaRegClipboard size={20} />, label: "Projects" },
     { to: "/messages", icon: <MdMessage size={22} />, label: "Message" },
     { to: "/profile", icon: <MdPerson size={22} />, label: "Profile" },
-    { to: "/admin", icon: <Shield size={20} />, label: "Admin" },
+    ...(user?.isAdmin ? [{ to: "/admin", icon: <Shield size={20} />, label: "Admin" }] : []),
   ];
 
   return (
@@ -31,8 +33,10 @@ const Sidebar = () => {
 
       {/* User */}
       <div>
-        <h1 className="text-white font-semibold text-lg">Ravi Sahane</h1>
-        <p className="text-gray-400 text-xs">Developer</p>
+        <h1 className="text-white font-semibold text-lg">{user?.username || "User"}</h1>
+        <p className="text-gray-400 text-xs">
+          {user?.isAdmin ? "Admin" : user?.isTeamLeader ? "Team Leader" : "Developer"}
+        </p>
       </div>
 
 

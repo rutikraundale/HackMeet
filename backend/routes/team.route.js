@@ -1,6 +1,7 @@
 import express from "express";
 import { 
     createTeam, 
+    getMyTeam,
     getRecommendedUsers, 
     inviteUser, 
     acceptInvitation, 
@@ -15,6 +16,9 @@ router.use(verifyAccessToken);
 
 // Route to create a new team, automatically makes caller the teamLeader
 router.post("/", createTeam);
+
+// Route to get my team
+router.get("/my-team", getMyTeam);
 
 // Route for team leaders to fetch other users that match their skills
 router.get("/recommendations", getRecommendedUsers);

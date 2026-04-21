@@ -1,120 +1,65 @@
-import React, { useState } from "react";
-import { Shield, Trophy, MapPin, Calendar, Users, Gift } from "lucide-react";
-
-// ── Child components ───────────────────────────────────────────────────────────
+import React, { useState, useEffect } from "react";
+import { Trophy, MapPin, Calendar, Users, Gift } from "lucide-react";
 import HackathonForm from "../components/Admin/HackathonForm";
 import AdminTeamCard from "../components/Admin/AdminTeamCard";
+import LoadingSkeleton from "../components/LoadingSkeleton";
+import { get } from "../utils/api";
 
-
-
-/**
- * AdminDashboard
- * Main container for the Admin Panel.
- *
- * Responsibilities:
- *  - Manages top-level state: active tab, hackathons list, teams list
- *  - Handles tab switching
- *  - Passes callbacks down to child components
- */
 const AdminDashboard = () => {
-
-
-
-
-  // Which tab is currently visible: "create" | "hackathons" | "teams"
   const [activeTab, setActiveTab] = useState("create");
-
-  // List of hackathons created by the admin during this session
   const [hackathons, setHackathons] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [loadingHacks, setLoadingHacks] = useState(true);
+  const [loadingTeams, setLoadingTeams] = useState(true);
 
-  // Teams list (static mock data for now)
-  
-  
-  const MOCK_TEAMS = [
-  {
-    _id: "t1",
-    teamName: "Web3 Warriors",
-    hackathonId: {
-      name: "Web3 Global Build",
-      startDate: "2024-12-01",
-      endDate: "2024-12-15",
-    },
-    teamLeader: { name: "Sarah Chen", email: "sarah@example.com" },
-    members: [
-      { name: "Sarah Chen" },
-      { name: "Jordan Lee" },
-      { name: "Priya Nair" },
-    ],
-    gitRepoLink: "https://github.com/web3warriors/repo",
-    islocked: false,
-  },
-  {
-    _id: "t2",
-    teamName: "AI Innovators",
-    hackathonId: {
-      name: "AI Agent Workshop",
-      startDate: "2024-11-22",
-      endDate: "2024-11-24",
-    },
-    teamLeader: { name: "Marcus Kim", email: "marcus@example.com" },
-    members: [{ name: "Marcus Kim" }, { name: "Aisha Patel" }],
-    gitRepoLink: "https://github.com/aiinnovators/repo",
-    islocked: true,
-  },
-  {
-    _id: "t3",
-    teamName: "ClimaTech Squad",
-    hackathonId: {
-      name: "Climate Tech Hackathon",
-      startDate: "2025-01-10",
-      endDate: "2025-01-12",
-    },
-    teamLeader: { name: "Lucas Berg", email: "lucas@example.com" },
-    members: [
-      { name: "Lucas Berg" },
-      { name: "Ravi Sahane" },
-      { name: "Jordan Lee" },
-      { name: "Priya Nair" },
-    ],
-    gitRepoLink: "https://github.com/climatech/repo",
-    islocked: false,
-  },
-];
-  const [teams] = useState(MOCK_TEAMS);
-  
+  // Fetch hackathons
+  useEffect(() => {
+    const fetchHackathons = async () => {
+      try {
+        const data = await get("/hackathons");
+        setHackathons(data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch hackathons:", err);
+      } finally {
+        setLoadingHacks(false);
+      }
+    };
+    fetchHackathons();
+  }, []);
 
+  // Fetch all teams
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const data = await get("/admin/teams");
+        setTeams(data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch teams:", err);
+      } finally {
+        setLoadingTeams(false);
+      }
+    };
+    fetchTeams();
+  }, []);
 
-  // ── Handlers ────────────────────────────────────────────────────────────────
-
-  /**
-   * Called by HackathonForm after a successful submit.
-   * Adds the new hackathon to the top of the list.
-   */
+  // After creating a hackathon, add it to local state
   const handleCreated = (hackathon) => {
-    setHackathons((prev) => [
-      { ...hackathon, _id: `h${Date.now()}`, createdAt: new Date() },
-      ...prev,
-    ]);
+    setHackathons((prev) => [hackathon, ...prev]);
   };
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
-
-  // Returns Tailwind classes for each tab button (active vs inactive styles)
   const tabClass = (tab) =>
     `pb-3 font-medium transition text-sm ${activeTab === tab
       ? "border-b-2 border-blue-500 text-blue-400"
       : "text-gray-400 hover:text-gray-300"
     }`;
 
-  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="p-6 bg-gray-950 min-h-screen text-white">
 
-      {/* ── Page Header ─────────────────────────────────────────────────────── */}
+      {/* Page Header */}
       <div className="mb-8 flex items-start justify-between">
         <div>
           <div className="flex items-center gap-3 mb-1">
-
             <h1 className="text-3xl font-bold">Admin Panel</h1>
           </div>
           <p className="text-gray-400 text-sm ">
@@ -122,7 +67,6 @@ const AdminDashboard = () => {
           </p>
         </div>
 
-        {/* Quick-stats chips (hidden on mobile) */}
         <div className="hidden md:flex items-center gap-3">
           <div className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-center">
             <p className="text-2xl font-bold text-blue-400">{hackathons.length}</p>
@@ -135,7 +79,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* ── Tab Navigation ───────────────────────────────────────────────────── */}
+      {/* Tab Navigation */}
       <div className="flex gap-8 border-b border-slate-700 mb-8">
         <button id="admin-tab-create" onClick={() => setActiveTab("create")} className={tabClass("create")}>
            Create Hackathon
@@ -148,14 +92,9 @@ const AdminDashboard = () => {
         </button>
       </div>
 
-      {/* ── CREATE TAB ──────────────────────────────────────────────────────── */}
+      {/* CREATE TAB */}
       {activeTab === "create" && (
         <div className="max-w-2xl mx-auto">
-          {/*
-            After a hackathon is created:
-            1. Add it to state via handleCreated
-            2. Switch to the "hackathons" tab automatically
-          */}
           <HackathonForm
             onCreated={(h) => {
               handleCreated(h);
@@ -165,11 +104,16 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ── HACKATHONS TAB ──────────────────────────────────────────────────── */}
+      {/* HACKATHONS TAB */}
       {activeTab === "hackathons" && (
         <div>
-          {hackathons.length === 0 ? (
-            /* Empty state */
+          {loadingHacks ? (
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {[...Array(3)].map((_, i) => (
+                <LoadingSkeleton key={i} variant="card" />
+              ))}
+            </div>
+          ) : hackathons.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-slate-800/30 rounded-xl border border-slate-700">
               <div className="text-5xl mb-4">🏆</div>
               <h3 className="text-xl font-semibold text-gray-300 mb-2">No Hackathons Yet</h3>
@@ -182,14 +126,12 @@ const AdminDashboard = () => {
               </button>
             </div>
           ) : (
-            /* Hackathon cards grid */
             <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
               {hackathons.map((h) => (
                 <div
                   key={h._id}
                   className="bg-slate-800 border border-slate-700 rounded-xl p-5 hover:border-blue-500/50 transition"
                 >
-                  {/* Card header: trophy icon + Active badge */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="w-9 h-9 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
                       <Trophy size={16} className="text-blue-400" />
@@ -199,11 +141,9 @@ const AdminDashboard = () => {
                     </span>
                   </div>
 
-                  {/* Name & description */}
                   <h3 className="text-white font-semibold text-base mb-1">{h.name}</h3>
                   <p className="text-gray-400 text-xs mb-3 line-clamp-2">{h.description}</p>
 
-                  {/* Location, dates, team size */}
                   <div className="space-y-1.5 text-xs text-gray-400">
                     <div className="flex items-center gap-2">
                       <MapPin size={12} className="text-blue-400" />
@@ -219,7 +159,6 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  {/* Prizes (only shown if prizes exist) */}
                   {h.prizes?.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-slate-700">
                       <p className="text-xs text-gray-500 mb-1.5 flex items-center gap-1">
@@ -244,25 +183,28 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* ── TEAMS TAB ───────────────────────────────────────────────────────── */}
+      {/* TEAMS TAB */}
       {activeTab === "teams" && (
         <div>
-          {/* Summary line */}
           <div className="flex items-center justify-between mb-5">
             <p className="text-gray-400 text-sm">
               Showing <span className="text-white font-medium">{teams.length}</span> teams across all hackathons
             </p>
           </div>
 
-          {teams.length === 0 ? (
-            /* Empty state */
+          {loadingTeams ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <LoadingSkeleton key={i} variant="card" />
+              ))}
+            </div>
+          ) : teams.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-slate-800/30 rounded-xl border border-slate-700">
               <div className="text-5xl mb-4">👥</div>
               <h3 className="text-xl font-semibold text-gray-300 mb-2">No Teams Registered</h3>
               <p className="text-gray-400">Teams will appear here once participants register.</p>
             </div>
           ) : (
-            /* One AdminTeamCard per team */
             <div className="space-y-3">
               {teams.map((team) => (
                 <AdminTeamCard key={team._id} team={team} />

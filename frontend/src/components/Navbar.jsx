@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { Bell, Settings, Search } from "lucide-react";
+import { Settings, Search, LogOut } from "lucide-react";
 import { UserIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [search, setSearch] = useState("");
-
 
   const handleSearch = (e) => {
     setSearch(e.target.value);
@@ -15,6 +15,11 @@ const Navbar = () => {
 
   const handleProfileClick = () => {
     navigate("/profile");
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
   };
 
   return (
@@ -45,8 +50,15 @@ const Navbar = () => {
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center gap-6 relative">
-    
+      <div className="flex items-center gap-4 relative">
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          className="p-2 rounded hover:bg-slate-800 transition flex items-center gap-2 text-gray-300 hover:text-red-400"
+          title="Sign Out"
+        >
+          <LogOut className="w-5 h-5" />
+        </button>
 
         {/* Settings */}
         <button className="p-2 rounded hover:bg-slate-800 transition">
@@ -56,9 +68,13 @@ const Navbar = () => {
         {/* Profile */}
         <button
           onClick={handleProfileClick}
-          className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center hover:bg-blue-600 transition"
+          className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center hover:bg-blue-600 transition overflow-hidden"
         >
-          <UserIcon className="h-5 w-5 text-white" />
+          {user?.profilePicture ? (
+            <img src={user.profilePicture} alt="profile" className="w-full h-full object-cover" />
+          ) : (
+            <UserIcon className="h-5 w-5 text-white" />
+          )}
         </button>
       </div>
     </div>

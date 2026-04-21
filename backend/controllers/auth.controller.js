@@ -8,7 +8,7 @@ import { uploadToCloudinary } from "../utils/cloudinary.js";
 //  POST /api/auth/signup
 // ─────────────────────────────────────────────────────────────────────────────
 export const signup = async (req, res) => {
-    const { username, email, password } = req.body;
+    const { username, email, password, bio, college, skills } = req.body;
 
     try {
         // ── Validate input ────────────────────────────────────────────────────
@@ -44,7 +44,10 @@ export const signup = async (req, res) => {
         const newUser = await User.create({
             username,
             email,
-            password: hashedPassword
+            password: hashedPassword,
+            bio,
+            college,
+            skills: skills || []
         });
 
         // ── Issue tokens ──────────────────────────────────────────────────────
@@ -186,10 +189,19 @@ export const refreshToken = async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 export const getMe = async (req, res) => {
     try {
-        // req.user is set by the verifyAccessToken middleware
+        const user = await User.findById(req.user._id)
+            .select("-password")
+            .populate({
+                path: "invitations",
+                populate: [
+                    { path: "hackathonId", select: "name" },
+                    { path: "teamLeader", select: "username" }
+                ]
+            });
+
         return res.status(200).json({
             success: true,
-            user: req.user
+            user
         });
     } catch (error) {
         console.error("[getMe]", error);

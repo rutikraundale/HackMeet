@@ -1,4 +1,5 @@
 import Hackathon from "../models/hackathons.model.js";
+import Team from "../models/team.model.js";
 
 // @desc    Create a new hackathon
 // @route   POST /api/admin/hackathons
@@ -71,5 +72,25 @@ export const getHackathonsSegmented = async (req, res) => {
     } catch (error) {
         console.error("Error fetching hackathons:", error);
         res.status(500).json({ success: false, message: "Failed to fetch hackathons." });
+    }
+};
+
+// @desc    Get all teams
+// @route   GET /api/admin/teams
+// @access  Private/Admin
+export const getAllTeams = async (req, res) => {
+    try {
+        const teams = await Team.find({})
+            .populate("teamLeader", "username email")
+            .populate("members", "username email")
+            .populate("hackathonId", "name startDate endDate");
+
+        res.status(200).json({
+            success: true,
+            data: teams
+        });
+    } catch (error) {
+        console.error("Error fetching teams:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch teams." });
     }
 };

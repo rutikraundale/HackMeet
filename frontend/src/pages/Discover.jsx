@@ -1,26 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Users, UserPlus } from 'lucide-react';
+import { Search } from 'lucide-react';
 import UserCard from '../components/UserCard';
 import LoadingSkeleton from '../components/LoadingSkeleton';
-import { showToast } from '../utils/toastUtils';
-
-const MY_SKILLS = ["React", "Node.js", "MongoDB"];
-
-const developers = [
-  { id: "1", name: "Sarah Chen", role: "Senior Full Stack Dev", location: "San Francisco, CA", skills: ["React", "Node.js", "TypeScript", "MongoDB"], status: "open", initials: "SC", color: "#1a3a5c" },
-  { id: "2", name: "Marcus Kim", role: "ML Engineer", location: "Seoul, South Korea", skills: ["Python", "TensorFlow", "Docker", "AWS"], status: "open", initials: "MK", color: "#2d1a5c" },
-  { id: "3", name: "Priya Nair", role: "Frontend Developer", location: "Bangalore, India", skills: ["React", "Vue", "CSS", "Figma"], status: "open", initials: "PN", color: "#1a3d2b" },
-  { id: "4", name: "Jordan Lee", role: "Backend Engineer", location: "London, UK", skills: ["Node.js", "PostgreSQL", "Redis", "Docker"], status: "busy", initials: "JL", color: "#3d2a1a" },
-  { id: "5", name: "Aisha Patel", role: "DevOps Engineer", location: "Dubai, UAE", skills: ["AWS", "Kubernetes", "Terraform", "CI/CD"], status: "open", initials: "AP", color: "#1a3040" },
-  { id: "6", name: "Lucas Berg", role: "Blockchain Dev", location: "Berlin, Germany", skills: ["Solidity", "Web3.js", "React", "Node.js"], status: "busy", initials: "LB", color: "#3d1a2a" },
-];
-
-const ALL_SKILLS = [...new Set(developers.flatMap((d) => d.skills))];
-
-const calcMatch = (skills) => {
-  const common = skills.filter((s) => MY_SKILLS.includes(s));
-  return Math.round((common.length / Math.max(MY_SKILLS.length, 1)) * 100);
-};
+import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
+import { get, post } from '../utils/api';
 
 const Discover = () => {
   const [search, setSearch] = useState("");
@@ -28,13 +12,30 @@ const Discover = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [invitedIds, setInvitedIds] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [developers, setDevelopers] = useState([]);
+  const { addToast } = useToast();
+  const { user } = useAuth();
+
+  const mySkills = user?.skills || [];
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
+    const fetchUsers = async () => {
+      try {
+        const data = await get("/users");
+        setDevelopers(data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchUsers();
   }, []);
+
+  const ALL_SKILLS = useMemo(() => 
+    [...new Set(developers.flatMap((d) => d.skills || []))],
+    [developers]
+  );
 
   const toggleSkill = (skill) => {
     setSelectedSkills(prev =>
@@ -42,29 +43,51 @@ const Discover = () => {
     );
   };
 
-  const handleInvite = (id) => {
-    if (!invitedIds.includes(id)) {
+  const calcMatch = (skills) => {
+    if (!mySkills.length || !skills?.length) return 0;
+    const common = skills.filter((s) => mySkills.includes(s));
+    return Math.round((common.length / Math.max(mySkills.length, 1)) * 100);
+  };
+
+  const handleInvite = async (id) => {
+    if (invitedIds.includes(id)) return;
+    try {
+      await post("/teams/invite", { targetUserId: id });
       setInvitedIds([...invitedIds, id]);
-      showToast('Invite sent to developer! ✨', 'success');
+      addToast('Invite sent to developer! ✨', 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to send invite', 'error');
     }
   };
 
   const filtered = useMemo(() => {
     return developers.filter((d) => {
       const q = search.toLowerCase();
-      const matchSearch = !q || d.name.toLowerCase().includes(q) || d.role.toLowerCase().includes(q);
-      const matchStatus = statusFilter === "all" || d.status === statusFilter;
-      const matchSkills = selectedSkills.length === 0 || selectedSkills.some((s) => d.skills.includes(s));
-      return matchSearch && matchStatus && matchSkills;
+      const matchSearch = !q || (d.username || "").toLowerCase().includes(q) || (d.bio || "").toLowerCase().includes(q);
+      const matchSkills = selectedSkills.length === 0 || selectedSkills.some((s) => (d.skills || []).includes(s));
+      return matchSearch && matchSkills;
     });
-  }, [search, statusFilter, selectedSkills]);
+  }, [search, selectedSkills, developers]);
+
+  // Map backend user to UserCard format
+  const mapUser = (dev) => ({
+    id: dev._id,
+    name: dev.username,
+    role: dev.college || "Developer",
+    location: dev.college || "",
+    skills: dev.skills || [],
+    status: dev.teamId ? "busy" : "open",
+    initials: (dev.username || "??").slice(0, 2).toUpperCase(),
+    color: `hsl(${(dev.username || "").length * 40}, 40%, 25%)`,
+    profilePicture: dev.profilePicture,
+  });
 
   return (
     <div className="p-6 bg-gray-950 min-h-screen text-white">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Discover Developers</h1>
-        <p className="text-gray-400 mt-2">Find and connect with talented developers in your region</p>
+        <p className="text-gray-400 mt-2">Find and connect with talented developers</p>
       </div>
 
       {/* Search and Filters */}
@@ -76,54 +99,39 @@ const Discover = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or role..."
+            placeholder="Search by name..."
             className="bg-transparent outline-none text-sm text-white w-full placeholder-gray-500"
           />
         </div>
 
-        {/* Status Filter */}
-        <div className="flex gap-2">
-          {["all", "open", "busy"].map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setStatusFilter(filter)}
-              className={`px-4 py-2 rounded-lg text-sm transition ${
-                statusFilter === filter
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-800 text-gray-400 hover:bg-slate-700"
-              }`}
-            >
-              {filter === "all" ? "All" : filter === "open" ? "✓ Open to team up" : "⏳ Busy"}
-            </button>
-          ))}
-        </div>
-
         {/* Skill Filter */}
-        <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Filter by Skills</p>
-          <div className="flex flex-wrap gap-2">
-            {ALL_SKILLS.map((skill) => (
-              <button
-                key={skill}
-                onClick={() => toggleSkill(skill)}
-                className={`px-3 py-1 rounded text-xs transition ${
-                  selectedSkills.includes(skill)
-                    ? "bg-blue-600 text-white"
-                    : "bg-slate-800 text-gray-300 hover:bg-slate-700"
-                }`}
-              >
-                {skill}
-              </button>
-            ))}
+        {ALL_SKILLS.length > 0 && (
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Filter by Skills</p>
+            <div className="flex flex-wrap gap-2">
+              {ALL_SKILLS.map((skill) => (
+                <button
+                  key={skill}
+                  onClick={() => toggleSkill(skill)}
+                  className={`px-3 py-1 rounded text-xs transition ${
+                    selectedSkills.includes(skill)
+                      ? "bg-blue-600 text-white"
+                      : "bg-slate-800 text-gray-300 hover:bg-slate-700"
+                  }`}
+                >
+                  {skill}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         {[
           { label: "Total Developers", value: developers.length },
-          { label: "Open to Team Up", value: developers.filter((d) => d.status === "open").length },
+          { label: "Open to Team Up", value: developers.filter((d) => !d.teamId).length },
           { label: "Matching Filters", value: filtered.length },
         ].map((stat) => (
           <div key={stat.label} className="bg-slate-800 border border-slate-700 rounded-lg p-4">
@@ -150,7 +158,6 @@ const Discover = () => {
           <button
             onClick={() => {
               setSearch("");
-              setStatusFilter("all");
               setSelectedSkills([]);
             }}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition text-sm font-medium"
@@ -160,15 +167,18 @@ const Discover = () => {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((dev) => (
-            <UserCard
-              key={dev.id}
-              user={dev}
-              compatibility={calcMatch(dev.skills)}
-              onInvite={handleInvite}
-              isInvited={invitedIds.includes(dev.id)}
-            />
-          ))}
+          {filtered.map((dev) => {
+            const mapped = mapUser(dev);
+            return (
+              <UserCard
+                key={dev._id}
+                user={mapped}
+                compatibility={calcMatch(dev.skills)}
+                onInvite={handleInvite}
+                isInvited={invitedIds.includes(dev._id)}
+              />
+            );
+          })}
         </div>
       )}
     </div>
