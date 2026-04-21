@@ -5,6 +5,7 @@ import { FaRegClipboard } from "react-icons/fa";
 import { MdMessage, MdPerson, MdPeopleOutline } from "react-icons/md";
 import { HiOutlineUserGroup } from "react-icons/hi";
 import { RiCompassDiscoverLine } from "react-icons/ri";
+import { Shield } from "lucide-react";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -22,6 +23,7 @@ const Sidebar = () => {
     { to: "/projects", icon: <FaRegClipboard size={20} />, label: "Projects" },
     { to: "/messages", icon: <MdMessage size={22} />, label: "Message" },
     { to: "/profile", icon: <MdPerson size={22} />, label: "Profile" },
+    { to: "/admin", icon: <Shield size={20} />, label: "Admin" },
   ];
 
   return (

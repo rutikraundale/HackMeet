@@ -11,14 +11,15 @@ import Discover from "../pages/Discover";
 import TeamBuilder from "../pages/TeamBuilder";
 import HackathonDetail from "../pages/HackathonDetail";
 import Projects from "../pages/Projects";
+import AdminDashboard from "../pages/AdminDashboard";
 
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/signup" element={<SignUp />} />
+      <Route path="/" element={<SignUp />} />
       <Route path="/login" element={<SignIn />} />
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <DashboardLayout>
             <Dashboard />
@@ -53,7 +54,7 @@ const AppRoutes = () => {
         path="/messages/:id"
         element={
           <DashboardLayout>
-            <Message/>
+            <Message />
           </DashboardLayout>
         }
       />
@@ -94,6 +95,14 @@ const AppRoutes = () => {
         element={
           <DashboardLayout>
             <HackathonDetail />
+          </DashboardLayout>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <DashboardLayout>
+            <AdminDashboard />
           </DashboardLayout>
         }
       />
