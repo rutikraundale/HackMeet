@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import express from "express";
-import cors from "cors";
 import cookieParser from "cookie-parser";
+import { corsMiddleware } from "./middleware/cors.js";
 
 import connectDB from "./db/connection.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -11,13 +11,11 @@ import hackathonRoutes from "./routes/hackathon.route.js";
 import teamRoutes from "./routes/team.route.js";
 import messageRoutes from "./routes/message.route.js";
 import { app, server } from "./socket/socket.js";
+
 dotenv.config();
 
 // ── Global Middleware ─────────────────────────────────────────────────────────
-app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    credentials: true   // Required to allow cookies to be sent cross-origin
-}));
+app.use(corsMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());            // Parses Cookie header → req.cookies
