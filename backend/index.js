@@ -9,9 +9,9 @@ import adminRoutes from "./routes/admin.route.js";
 import userRoutes from "./routes/user.route.js";
 import hackathonRoutes from "./routes/hackathon.route.js";
 import teamRoutes from "./routes/team.route.js";
+import messageRoutes from "./routes/message.route.js";
+import { app, server } from "./socket/socket.js";
 dotenv.config();
-
-const app = express();
 
 // ── Global Middleware ─────────────────────────────────────────────────────────
 app.use(cors({
@@ -28,6 +28,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/hackathons", hackathonRoutes);
 app.use("/api/teams", teamRoutes);
+app.use("/api/messages", messageRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/", (req, res) => {
@@ -51,7 +52,7 @@ app.use((err, req, res, next) => {
 // ── Start server ──────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
         console.log(`✅  Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`);
     });
 });

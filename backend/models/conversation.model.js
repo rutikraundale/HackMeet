@@ -6,17 +6,19 @@ const conversationSchema=new mongoose.Schema({
         ref:"User",
         required:true
     },
-    lastMessage:{
-        type:String,
-        sender:{
-            type:{type:mongoose.Schema.Types.ObjectId,ref:"User"},
-            required:true
+    lastMessage: {
+        text: {
+            type: String
         },
-        seen:{
-            type:Boolean,
-            default:false
+        sender: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true
         },
-        
+        seen: {
+            type: Boolean,
+            default: false
+        }
     },
     
 }, { timestamps: true });
