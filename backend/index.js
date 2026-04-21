@@ -6,6 +6,9 @@ import cookieParser from "cookie-parser";
 import connectDB from "./db/connection.js";
 import authRoutes from "./routes/auth.routes.js";
 import adminRoutes from "./routes/admin.route.js";
+import userRoutes from "./routes/user.route.js";
+import hackathonRoutes from "./routes/hackathon.route.js";
+import teamRoutes from "./routes/team.route.js";
 dotenv.config();
 
 const app = express();
@@ -22,6 +25,9 @@ app.use(cookieParser());            // Parses Cookie header → req.cookies
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/hackathons", hackathonRoutes);
+app.use("/api/teams", teamRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/", (req, res) => {
