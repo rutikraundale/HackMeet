@@ -192,3 +192,59 @@ export const declineInvitation = async (req, res) => {
          res.status(500).json({ success: false, message: "Failed to decline invitation" });
     }
 };
+
+// @desc    Fetch latest commit from team's github repo
+// @route   GET /api/teams/:id/commits/latest
+// @access  Private
+export const getLatestCommit = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const team = await Team.findById(id);
+
+        if (!team) {
+            return res.status(404).json({ success: false, message: "Team not found." });
+        }
+
+        if (!team.gitRepoLink) {
+            return res.status(400).json({ success: false, message: "No GitHub repository linked to this team." });
+        }
+
+        // Extract owner and repo from URL, e.g., https://github.com/owner/repo
+        const match = team.gitRepoLink.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+        
+        if (!match) {
+             return res.status(400).json({ success: false, message: "Invalid GitHub repository URL." });
+        }
+
+        const [, owner, repo] = match;
+        const repoClean = repo.replace(/\.git$/, ''); // Remove .git if present
+
+        const githubToken = process.env.GITHUB_KEY;
+
+        const response = await fetch(`https://api.github.com/repos/${owner}/${repoClean}/commits`, {
+            headers: {
+                "Authorization": `token ${githubToken}`,
+                "Accept": "application/vnd.github.v3+json"
+            }
+        });
+
+        if (!response.ok) {
+             return res.status(response.status).json({ success: false, message: "Failed to fetch commits from GitHub." });
+        }
+
+        const commits = await response.json();
+
+        if (commits.length === 0) {
+             return res.status(200).json({ success: true, message: "No commits found.", data: null });
+        }
+
+        res.status(200).json({
+             success: true,
+             data: commits[0] // Return only the most recent commit
+        });
+
+    } catch (error) {
+         console.error("Error fetching latest commit:", error);
+         res.status(500).json({ success: false, message: "Internal server error." });
+    }
+};

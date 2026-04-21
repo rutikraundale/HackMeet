@@ -4,7 +4,8 @@ import {
     getRecommendedUsers, 
     inviteUser, 
     acceptInvitation, 
-    declineInvitation 
+    declineInvitation,
+    getLatestCommit
 } from "../controllers/team.controller.js";
 import verifyAccessToken from "../middleware/verifyToken.js";
 
@@ -24,5 +25,8 @@ router.post("/invite", inviteUser);
 // Routes to respond to an invitation
 router.post("/accept-invite/:teamId", acceptInvitation);
 router.post("/decline-invite/:teamId", declineInvitation);
+
+// Route to get GitHub Repo activity natively
+router.get("/:id/commits/latest", getLatestCommit);
 
 export default router;
