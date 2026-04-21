@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 
 import connectDB from "./db/connection.js";
 import authRoutes from "./routes/auth.routes.js";
-
+import adminRoutes from "./routes/admin.route.js";
 dotenv.config();
 
 const app = express();
@@ -21,6 +21,7 @@ app.use(cookieParser());            // Parses Cookie header → req.cookies
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/", (req, res) => {

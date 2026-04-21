@@ -22,7 +22,8 @@ const teamSchema=new mongoose.Schema({
     },
     gitRepoLink:{
         type:String,
-        required:true
+        required:false,
+        default:""
     },
     islocked:{
         type:Boolean,
