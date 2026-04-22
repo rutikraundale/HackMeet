@@ -20,7 +20,6 @@ const Sidebar = () => {
   const navItems = [
     { to: "/dashboard", icon: <AiOutlineProject size={22} />, label: "Dashboard" },
     { to: "/discover", icon: <RiCompassDiscoverLine size={22} />, label: "Discover" },
-    { to: "/teammates", icon: <MdPeopleOutline size={22} />, label: "Teammates" },
     { to: "/team-builder", icon: <HiOutlineUserGroup size={22} />, label: "Team Builder" },
     { to: "/projects", icon: <FaRegClipboard size={20} />, label: "Projects" },
     { to: "/messages", icon: <MdMessage size={22} />, label: "Message" },

@@ -7,7 +7,6 @@ import Profile from "../pages/Profile";
 import UsersProfile from "../pages/UsersProfile";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Message from "../pages/Message";
-import Teammates from "../pages/Teammates";
 import Discover from "../pages/Discover";
 import TeamBuilder from "../pages/TeamBuilder";
 import HackathonDetail from "../pages/HackathonDetail";
@@ -43,7 +42,6 @@ const AppRoutes = () => {
       <Route path="/messages" element={<Protected><Message /></Protected>} />
       <Route path="/messages/:id" element={<Protected><Message /></Protected>} />
       <Route path="/projects" element={<Protected><Projects /></Protected>} />
-      <Route path="/teammates" element={<Protected><Teammates /></Protected>} />
       <Route path="/discover" element={<Protected><Discover /></Protected>} />
       <Route path="/team-builder" element={<Protected><TeamBuilder /></Protected>} />
       <Route path="/hackathon/:id" element={<Protected><HackathonDetail /></Protected>} />

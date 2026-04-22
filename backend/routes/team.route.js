@@ -6,7 +6,8 @@ import {
     inviteUser, 
     acceptInvitation, 
     declineInvitation,
-    getLatestCommit
+    getLatestCommit,
+    updateTeam
 } from "../controllers/team.controller.js";
 import verifyAccessToken from "../middleware/verifyToken.js";
 
@@ -32,5 +33,8 @@ router.post("/decline-invite/:teamId", declineInvitation);
 
 // Route to get GitHub Repo activity natively
 router.get("/:id/commits/latest", getLatestCommit);
+
+// Route to update team (e.g. gitRepoLink, todos)
+router.put("/:id", updateTeam);
 
 export default router;

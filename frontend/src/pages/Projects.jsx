@@ -1,157 +1,332 @@
-import React, { useState, useMemo } from "react";
-import { Plus, Search } from "lucide-react";
-import { showToast } from "../utils/toastUtils";
-import { INITIAL_PROJECTS, INITIAL_TASKS, TABS, EMPTY_FORM } from "../data/projectData";
-import ProjectCard from "../components/ProjectCard";
-import ProjectDetail from "../components/ProjectDetail";
-import CreateProjectModal from "../components/CreateProjectModal";
+import React, { useState, useEffect } from "react";
+import { Plus, GitBranch, Check, RefreshCw } from "lucide-react";
+import { FaGithub } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import { get, put } from "../utils/api";
+import { useToast } from "../context/ToastContext";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 
 const Projects = () => {
-  const [projects, setProjects] = useState(INITIAL_PROJECTS);
-  const [tasks, setTasks]       = useState(INITIAL_TASKS);
-  const [selectedId, setSelectedId] = useState(null);
-  const [tab, setTab]           = useState("all");
-  const [search, setSearch]     = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm]         = useState(EMPTY_FORM);
+  const [team, setTeam] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [repoLink, setRepoLink] = useState("");
+  const [latestCommit, setLatestCommit] = useState(null);
+  const [fetchingCommit, setFetchingCommit] = useState(false);
+  
+  const [newTodo, setNewTodo] = useState("");
+  
+  const { addToast } = useToast();
 
-  const selectedProject = projects.find((p) => p.id === selectedId);
+  useEffect(() => {
+    fetchTeam();
+  }, []);
 
-  const counts = useMemo(() => ({
-    all:    projects.length,
-    live:   projects.filter((p) => p.status === "live").length,
-    dev:    projects.filter((p) => p.status === "dev").length,
-    done:   projects.filter((p) => p.status === "done").length,
-    paused: projects.filter((p) => p.status === "paused").length,
-  }), [projects]);
-
-  const filtered = useMemo(() => projects.filter((p) => {
-    const q = search.toLowerCase();
-    const matchSearch = !q || p.name.toLowerCase().includes(q)
-      || p.hackathon.toLowerCase().includes(q)
-      || p.tags.some((t) => t.toLowerCase().includes(q));
-    return matchSearch && (tab === "all" || p.status === tab);
-  }), [projects, search, tab]);
-
-  const handleFormChange = (key, value) => setForm((f) => ({ ...f, [key]: value }));
-
-  const handleCreate = () => {
-    if (!form.name.trim()) { showToast("Please enter a project name", "error"); return; }
-    const id = `p-${Date.now()}`;
-    setProjects((prev) => [{
-      id, name: form.name, hackathon: form.hackathon || "—",
-      desc: form.desc || "No description yet.", status: form.status, progress: 0,
-      tags: form.tags ? form.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
-      members: [{ initials: "ME", name: "You", role: "Developer", color: "#1a3a5c", textColor: "#b8d4f8" }],
-      updated: "just now", github: "#", demo: null,
-    }, ...prev]);
-    setTasks((prev) => ({ ...prev, [id]: [
-      { id: 1, text: "Set up project repository", done: false },
-      { id: 2, text: "Define MVP scope", done: false },
-      { id: 3, text: "Start building", done: false },
-    ]}));
-    setForm(EMPTY_FORM);
-    setShowModal(false);
-    showToast("Project created! 🎉", "success");
+  const fetchTeam = async () => {
+    try {
+      const data = await get("/teams/my-team");
+      if (data.data) {
+        setTeam(data.data);
+        setRepoLink(data.data.gitRepoLink || "");
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleToggleTask = (taskId) => {
-    setTasks((prev) => ({
-      ...prev,
-      [selectedId]: prev[selectedId].map((t) => t.id === taskId ? { ...t, done: !t.done } : t),
-    }));
+  const handleUpdateRepo = async () => {
+    try {
+      const data = await put(`/teams/${team._id}`, { gitRepoLink: repoLink });
+      setTeam(data.data);
+      addToast("Repository linked successfully!", "success");
+    } catch (err) {
+      addToast(err.message || "Failed to update repository", "error");
+    }
   };
 
-  const handleDelete = (id) => {
-    setProjects((prev) => prev.filter((p) => p.id !== id));
-    setSelectedId(null);
-    showToast("Project deleted", "info");
+  const fetchLatestCommit = async () => {
+    if (!team.gitRepoLink) {
+        addToast("Please link a GitHub repository first.", "error");
+        return;
+    }
+    setFetchingCommit(true);
+    try {
+      const data = await get(`/teams/${team._id}/commits/latest`);
+      if (data.data) {
+          setLatestCommit(data.data);
+          addToast("Fetched latest commit!", "success");
+      } else {
+          addToast("No commits found.", "info");
+      }
+    } catch (err) {
+      addToast(err.message || "Failed to fetch commit", "error");
+    } finally {
+      setFetchingCommit(false);
+    }
   };
 
-  if (selectedProject) {
+  const handleAddTodo = async () => {
+    if (!newTodo.trim()) return;
+    const todoItem = { id: Date.now().toString(), text: newTodo, completed: false };
+    const updatedTodos = [...(team.todos || []), todoItem];
+    try {
+      const data = await put(`/teams/${team._id}`, { todos: updatedTodos });
+      setTeam(data.data);
+      setNewTodo("");
+    } catch (err) {
+      addToast(err.message || "Failed to add task", "error");
+    }
+  };
+
+  const handleToggleTodo = async (todoId) => {
+    const updatedTodos = team.todos.map(t => 
+      t.id === todoId ? { ...t, completed: !t.completed } : t
+    );
+    try {
+      const data = await put(`/teams/${team._id}`, { todos: updatedTodos });
+      setTeam(data.data);
+    } catch (err) {
+      addToast(err.message || "Failed to update task", "error");
+    }
+  };
+  
+  const handleDeleteTodo = async (todoId) => {
+    const updatedTodos = team.todos.filter(t => t.id !== todoId);
+    try {
+      const data = await put(`/teams/${team._id}`, { todos: updatedTodos });
+      setTeam(data.data);
+    } catch (err) {
+      addToast(err.message || "Failed to delete task", "error");
+    }
+  };
+
+  if (loading) {
     return (
       <div className="p-6 bg-gray-950 min-h-screen text-white">
-        <ProjectDetail
-          project={selectedProject}
-          tasks={tasks[selectedId] || []}
-          onBack={() => setSelectedId(null)}
-          onToggleTask={handleToggleTask}
-          onDelete={handleDelete}
-        />
+         <div className="grid md:grid-cols-2 gap-4">
+             <LoadingSkeleton variant="card" />
+             <LoadingSkeleton variant="card" />
+         </div>
       </div>
     );
   }
 
+  if (!team) {
+    return (
+      <div className="p-6 bg-gray-950 min-h-screen text-white flex flex-col items-center justify-center">
+        <div className="text-6xl mb-4">🚀</div>
+        <h2 className="text-2xl font-bold mb-2">No Active Project</h2>
+        <p className="text-gray-400 mb-6 text-center max-w-md">
+          You are not currently part of any team. Join a hackathon or discover teammates to start building!
+        </p>
+        <div className="flex gap-4">
+          <Link to="/discover" className="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg font-medium transition">
+            Find Teammates
+          </Link>
+          <Link to="/team-builder" className="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-lg font-medium transition text-white border border-gray-700">
+            Create a Team
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const doneCount = (team.todos || []).filter(t => t.completed).length;
+  const totalCount = (team.todos || []).length;
+  const progress = totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
+
   return (
     <div className="p-6 bg-gray-950 min-h-screen text-white">
-      {showModal && (
-        <CreateProjectModal
-          form={form}
-          onChange={handleFormChange}
-          onSave={handleCreate}
-          onClose={() => { setShowModal(false); setForm(EMPTY_FORM); }}
-        />
-      )}
-
-      <div className="flex justify-between items-start mb-6 flex-wrap gap-3">
-        <div>
-          <h1 className="text-3xl font-bold">Projects</h1>
-          <p className="text-gray-400 mt-1">Track your hackathon builds from idea to deployment.</p>
-        </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-medium transition"
-        >
-          <Plus size={16} /> New Project
-        </button>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">{team.teamName}</h1>
+        <p className="text-gray-400 mt-1">Hackathon: <span className="text-blue-400">{team.hackathonId?.name || "Unknown"}</span></p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        {[
-          { label: "Total",       value: counts.all,  color: "text-white"      },
-          { label: "Live",        value: counts.live, color: "text-green-400"  },
-          { label: "In Progress", value: counts.dev,  color: "text-blue-400"   },
-          { label: "Completed",   value: counts.done, color: "text-purple-400" },
-        ].map((s) => (
-          <div key={s.label} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-            <p className="text-xs text-gray-500 mt-1">{s.label}</p>
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="md:col-span-2 space-y-6">
+          
+          {/* GitHub Integration */}
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+              <FaGithub size={18} /> GitHub Integration
+            </h3>
+            
+            <div className="flex gap-3 mb-4">
+              <input 
+                type="text" 
+                value={repoLink}
+                onChange={(e) => setRepoLink(e.target.value)}
+                placeholder="https://github.com/username/repo"
+                className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500"
+              />
+              <button 
+                onClick={handleUpdateRepo}
+                className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap"
+              >
+                Save Link
+              </button>
+            </div>
+
+            {team.gitRepoLink && (
+              <div className="mt-6 border-t border-gray-800 pt-4">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-sm text-gray-400">Latest Activity</span>
+                  <button 
+                    onClick={fetchLatestCommit}
+                    disabled={fetchingCommit}
+                    className="flex items-center gap-2 text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+                  >
+                    <RefreshCw size={14} className={fetchingCommit ? "animate-spin" : ""} /> 
+                    Fetch Commits
+                  </button>
+                </div>
+                
+                {latestCommit ? (
+                  <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <GitBranch size={16} className="text-blue-400 mt-1" />
+                      <div>
+                        <p className="text-sm font-medium">{latestCommit.commit.message}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          by <span className="text-gray-300">{latestCommit.commit.author.name}</span> • {new Date(latestCommit.commit.author.date).toLocaleString()}
+                        </p>
+                        <a href={latestCommit.html_url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline mt-2 inline-block">
+                          View on GitHub →
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500 italic">Click "Fetch Commits" to see the latest repository activity.</p>
+                )}
+              </div>
+            )}
           </div>
-        ))}
-      </div>
 
-      <div className="flex border-b border-gray-800 mb-5">
-        {TABS.map(({ key, label }) => (
-          <button key={key} onClick={() => setTab(key)}
-            className={`px-4 py-2.5 text-sm border-b-2 transition -mb-px ${
-              tab === key ? "border-blue-500 text-blue-400" : "border-transparent text-gray-500 hover:text-gray-300"
-            }`}>
-            {label} <span className="ml-1 text-xs text-gray-600">{counts[key]}</span>
-          </button>
-        ))}
-      </div>
+          {/* Tasks/Todos */}
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm font-semibold tracking-wide flex items-center">
+                TEAM TASKS <span className="text-xs text-gray-500 font-normal ml-2">({doneCount}/{totalCount} done)</span>
+              </h3>
+            </div>
+            
+            <div className="mb-4">
+              <div className="flex justify-between text-xs mb-1.5">
+                <span className="text-gray-500">Project Progress</span>
+                <span className="text-blue-400 font-medium">{progress}%</span>
+              </div>
+              <div className="bg-gray-800 rounded-full h-1.5">
+                <div className="bg-blue-500 h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
+              </div>
+            </div>
 
-      <div className="flex items-center bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 mb-5 focus-within:border-blue-500 transition">
-        <Search className="w-4 h-4 text-gray-500 mr-2 flex-shrink-0" />
-        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search projects, hackathons, tech stack..."
-          className="bg-transparent outline-none text-sm text-white w-full placeholder-gray-600" />
-      </div>
+            <div className="flex gap-2 mb-4">
+              <input 
+                type="text" 
+                value={newTodo}
+                onChange={(e) => setNewTodo(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddTodo()}
+                placeholder="Add a new task..."
+                className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+              />
+              <button 
+                onClick={handleAddTodo}
+                className="bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 py-2 rounded-lg transition"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
 
-      {filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <p className="text-gray-500 mb-3">No projects match your filters.</p>
-          <button onClick={() => { setSearch(""); setTab("all"); }} className="text-sm text-blue-400 hover:text-blue-300">
-            Clear filters
-          </button>
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
+              {(!team.todos || team.todos.length === 0) ? (
+                <p className="text-xs text-gray-500 text-center py-4">No tasks added yet. Start planning!</p>
+              ) : (
+                team.todos.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between py-2.5 px-3 bg-gray-800/50 rounded-lg group"
+                  >
+                    <div className="flex items-center gap-3 cursor-pointer flex-1" onClick={() => handleToggleTodo(task.id)}>
+                      <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border transition ${task.completed ? "bg-blue-600 border-blue-600" : "border-gray-500"}`}>
+                        {task.completed && <Check size={10} className="text-white" />}
+                      </div>
+                      <span className={`text-sm transition ${task.completed ? "text-gray-500 line-through" : "text-gray-200"}`}>
+                        {task.text}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => handleDeleteTodo(task.id)}
+                      className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"
+                    >
+                      <Plus size={14} className="rotate-45" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map((p) => (
-            <ProjectCard key={p.id} project={p} onClick={() => setSelectedId(p.id)} />
-          ))}
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Team Members */}
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+            <h3 className="text-xs text-gray-500 tracking-widest mb-4">TEAM MEMBERS</h3>
+            <div className="space-y-3">
+              {team.members.map((m) => {
+                const isLeader = team.teamLeader?._id === m._id || team.teamLeader === m._id;
+                const initials = (m.username || "??").slice(0,2).toUpperCase();
+                const color = `hsl(${(m.username || "").length * 40}, 40%, 25%)`;
+                return (
+                  <div key={m._id} className="flex items-center gap-3">
+                    {m.profilePicture ? (
+                      <img src={m.profilePicture} alt={m.username} className="w-8 h-8 rounded-lg object-cover" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold" style={{ backgroundColor: color, color: "#fff" }}>
+                        {initials}
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm text-white flex items-center gap-1">
+                        {m.username} 
+                        {isLeader && <span className="text-yellow-400 text-xs" title="Team Leader">👑</span>}
+                      </p>
+                      <p className="text-xs text-gray-500">{m.college || "Developer"} <span className="text-green-500 text-[10px] ml-1">Accepted</span></p>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Pending Invites */}
+              {team.pendingInvites && team.pendingInvites.map((m) => {
+                const initials = (m.username || "??").slice(0,2).toUpperCase();
+                const color = `hsl(${(m.username || "").length * 40}, 40%, 25%)`;
+                return (
+                  <div key={`pending-${m._id}`} className="flex items-center gap-3 opacity-60">
+                    {m.profilePicture ? (
+                      <img src={m.profilePicture} alt={m.username} className="w-8 h-8 rounded-lg object-cover grayscale" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold grayscale" style={{ backgroundColor: color, color: "#fff" }}>
+                        {initials}
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm text-white flex items-center gap-1">
+                        {m.username} 
+                      </p>
+                      <p className="text-xs text-gray-500">{m.college || "Developer"} <span className="text-yellow-500 text-[10px] ml-1">Pending...</span></p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

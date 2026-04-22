@@ -29,10 +29,15 @@ const teamSchema=new mongoose.Schema({
         type:Boolean,
         default:false
     },
-    
-
-    
-    
+    pendingInvites: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    todos: [{
+        id: { type: String, required: true },
+        text: { type: String, required: true },
+        completed: { type: Boolean, default: false }
+    }]
 }, { timestamps: true });
 
 const Team = mongoose.model("Team", teamSchema);

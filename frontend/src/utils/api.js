@@ -42,7 +42,7 @@ const api = async (endpoint, options = {}) => {
 
   const data = await res.json();
 
-  if (!res.ok) {
+  if (!res.ok || data.success === false) {
     const err = new Error(data.message || "Something went wrong");
     err.status = res.status;
     err.data = data;

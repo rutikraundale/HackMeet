@@ -19,7 +19,7 @@ const verifyAccessToken = async (req, res, next) => {
         }
 
         if (!token) {
-            return res.status(401).json({
+            return res.status(200).json({
                 success: false,
                 message: "Unauthorized – no access token provided."
             });
@@ -32,7 +32,7 @@ const verifyAccessToken = async (req, res, next) => {
         const user = await User.findById(decoded.userId).select("-password");
 
         if (!user) {
-            return res.status(401).json({
+            return res.status(200).json({
                 success: false,
                 message: "Unauthorized – user not found."
             });

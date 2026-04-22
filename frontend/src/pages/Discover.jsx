@@ -2,18 +2,14 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import UserCard from '../components/UserCard';
 import LoadingSkeleton from '../components/LoadingSkeleton';
-import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
-import { get, post } from '../utils/api';
+import { get } from '../utils/api';
 
 const Discover = () => {
   const [search, setSearch] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [invitedIds, setInvitedIds] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [developers, setDevelopers] = useState([]);
-  const { addToast } = useToast();
   const { user } = useAuth();
 
   const mySkills = user?.skills || [];
@@ -49,25 +45,16 @@ const Discover = () => {
     return Math.round((common.length / Math.max(mySkills.length, 1)) * 100);
   };
 
-  const handleInvite = async (id) => {
-    if (invitedIds.includes(id)) return;
-    try {
-      await post("/teams/invite", { targetUserId: id });
-      setInvitedIds([...invitedIds, id]);
-      addToast('Invite sent to developer! ✨', 'success');
-    } catch (err) {
-      addToast(err.message || 'Failed to send invite', 'error');
-    }
-  };
-
   const filtered = useMemo(() => {
     return developers.filter((d) => {
+      // Don't show the current user in discover
+      if (user && d._id === user._id) return false;
       const q = search.toLowerCase();
       const matchSearch = !q || (d.username || "").toLowerCase().includes(q) || (d.bio || "").toLowerCase().includes(q);
       const matchSkills = selectedSkills.length === 0 || selectedSkills.some((s) => (d.skills || []).includes(s));
       return matchSearch && matchSkills;
     });
-  }, [search, selectedSkills, developers]);
+  }, [search, selectedSkills, developers, user]);
 
   // Map backend user to UserCard format
   const mapUser = (dev) => ({
@@ -174,8 +161,6 @@ const Discover = () => {
                 key={dev._id}
                 user={mapped}
                 compatibility={calcMatch(dev.skills)}
-                onInvite={handleInvite}
-                isInvited={invitedIds.includes(dev._id)}
               />
             );
           })}

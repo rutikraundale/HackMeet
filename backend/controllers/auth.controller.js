@@ -30,7 +30,7 @@ export const signup = async (req, res) => {
         const existingUser = await User.findOne({ $or: [{ email }, { username }] });
         if (existingUser) {
             const field = existingUser.email === email ? "Email" : "Username";
-            return res.status(409).json({
+            return res.status(200).json({
                 success: false,
                 message: `${field} is already in use.`
             });
@@ -84,7 +84,7 @@ export const login = async (req, res) => {
         // ── Find user ─────────────────────────────────────────────────────────
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(401).json({
+            return res.status(200).json({
                 success: false,
                 message: "Invalid email or password."
             });
@@ -93,7 +93,7 @@ export const login = async (req, res) => {
         // ── Verify password ───────────────────────────────────────────────────
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({
+            return res.status(200).json({
                 success: false,
                 message: "Invalid email or password."
             });

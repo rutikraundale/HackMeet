@@ -51,15 +51,16 @@ export const getMyTeam = async (req, res) => {
     try {
         const user = req.user;
         if (!user.teamId) {
-            return res.status(404).json({ success: false, message: "You do not belong to a team yet." });
+            return res.status(200).json({ success: true, data: null, message: "You do not belong to a team yet." });
         }
         const team = await Team.findById(user.teamId)
             .populate("members", "username email college profilePicture skills")
+            .populate("pendingInvites", "username email college profilePicture")
             .populate("teamLeader", "username")
-            .populate("hackathonId", "name startDate endDate");
+            .populate("hackathonId", "name startDate endDate teamsize");
 
         if (!team) {
-             return res.status(404).json({ success: false, message: "Team not found." });
+             return res.status(200).json({ success: true, data: null, message: "Team not found." });
         }
 
         res.status(200).json({ success: true, data: team });
@@ -110,18 +111,29 @@ export const inviteUser = async (req, res) => {
 
         // Verify the caller is a team leader
         if (!leaderUser.isTeamLeader || !leaderUser.teamId) {
-            return res.status(403).json({ success: false, message: "Only team leaders can invite members." });
+            return res.status(200).json({ success: false, message: "Only team leaders can invite members." });
         }
 
         const teamId = leaderUser.teamId;
 
         // Verify the team exists and isn't locked
-        const team = await Team.findById(teamId);
+        const team = await Team.findById(teamId).populate("hackathonId");
         if (!team) return res.status(404).json({ success: false, message: "Team not found." });
         if (team.islocked) return res.status(400).json({ success: false, message: "Team is locked. Cannot invite more users." });
 
         if (team.members.includes(targetUserId)) {
             return res.status(400).json({ success: false, message: "User is already a member of this team." });
+        }
+        
+        if (team.pendingInvites && team.pendingInvites.includes(targetUserId)) {
+            return res.status(400).json({ success: false, message: "User is already invited." });
+        }
+
+        const maxLimit = team.hackathonId?.teamsize || 4; // Default to 4 if not set
+        const currentSize = team.members.length + (team.pendingInvites?.length || 0);
+
+        if (currentSize >= maxLimit) {
+            return res.status(400).json({ success: false, message: `Cannot invite more members. Team size limit (${maxLimit}) reached.` });
         }
 
         // Add the teamId to the invited user's invitations array using $addToSet
@@ -134,6 +146,11 @@ export const inviteUser = async (req, res) => {
         if (!updatedUser) {
             return res.status(404).json({ success: false, message: "Target user not found." });
         }
+
+        // Add targetUserId to team's pendingInvites
+        team.pendingInvites = team.pendingInvites || [];
+        team.pendingInvites.push(targetUserId);
+        await team.save();
 
         res.status(200).json({
             success: true,
@@ -164,10 +181,13 @@ export const acceptInvitation = async (req, res) => {
              return res.status(400).json({ success: false, message: "You are already in a team. Please leave your current team first." });
         }
 
-        // Add user to team
+        // Add user to team and remove from pendingInvites
         const team = await Team.findByIdAndUpdate(
             teamId,
-            { $addToSet: { members: userId } },
+            { 
+                $addToSet: { members: userId },
+                $pull: { pendingInvites: userId }
+            },
             { new: true }
         );
 
@@ -207,6 +227,12 @@ export const declineInvitation = async (req, res) => {
         await User.findByIdAndUpdate(
             userId,
             { $pull: { invitations: teamId } }
+        );
+
+        // Update team: remove from pendingInvites
+        await Team.findByIdAndUpdate(
+            teamId,
+            { $pull: { pendingInvites: userId } }
         );
 
         res.status(200).json({
@@ -272,5 +298,40 @@ export const getLatestCommit = async (req, res) => {
     } catch (error) {
          console.error("Error fetching latest commit:", error);
          res.status(500).json({ success: false, message: "Internal server error." });
+    }
+};
+
+// @desc    Update team details (e.g. gitRepoLink, todos)
+// @route   PUT /api/teams/:id
+// @access  Private
+export const updateTeam = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { gitRepoLink, todos } = req.body;
+        const userId = req.user._id;
+
+        const team = await Team.findById(id);
+        if (!team) {
+            return res.status(404).json({ success: false, message: "Team not found." });
+        }
+
+        // Verify the user is a member of the team
+        if (!team.members.includes(userId)) {
+            return res.status(403).json({ success: false, message: "Only team members can update the team." });
+        }
+
+        if (gitRepoLink !== undefined) team.gitRepoLink = gitRepoLink;
+        if (todos !== undefined) team.todos = todos;
+
+        await team.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Team updated successfully.",
+            data: team
+        });
+    } catch (error) {
+        console.error("Error updating team:", error);
+        res.status(500).json({ success: false, message: "Failed to update team." });
     }
 };
