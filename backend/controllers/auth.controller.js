@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import generateTokensAndSetCookies from "../utils/generateTokens.js";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
+import cloudinary, { uploadToCloudinary } from "../utils/cloudinary.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  POST /api/auth/signup
@@ -243,6 +243,12 @@ export const getMe = async (req, res) => {
 export const updateProfile = async (req, res) => {
     try {
         const userId = req.user._id;
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
         const {
             bio,
             college,
@@ -256,18 +262,6 @@ export const updateProfile = async (req, res) => {
             removeProfilePicture
         } = req.body;
 
-        let profilePictureUrl = req.user.profilePicture;
-
-        if (removeProfilePicture === "true") {
-            profilePictureUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${req.user.username}`;
-        } else if (req.file) {
-            try {
-                profilePictureUrl = await uploadToCloudinary(req.file.buffer);
-            } catch (error) {
-                return res.status(500).json({ success: false, message: "Image upload failed: " + error.message });
-            }
-        }
-
         // Helper to parse potential stringified JSON arrays from FormData
         const parseArray = (field) => {
             if (field === undefined || field === null) return [];
@@ -279,43 +273,71 @@ export const updateProfile = async (req, res) => {
                 const parsed = JSON.parse(field);
                 return Array.isArray(parsed) ? parsed.map(String) : [String(parsed)];
             } catch (e) {
-                // Return as an array with a single string entry if it's just a comma-separated string or normal string
                 return field.split(',').map(item => item.trim()).filter(Boolean);
             }
         };
 
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            {
-                $set: {
-                    bio,
-                    college,
-                    skills: parseArray(skills),
-                    projects: parseArray(projects),
-                    hackathonsParticipated: parseArray(hackathonsParticipated),
-                    hackathonsWon: parseArray(hackathonsWon),
-                    codingPlatforms: parseArray(codingPlatforms),
-                    socialLinks: parseArray(socialLinks),
-                    profilePicture: profilePictureUrl,
-                    status: status || "open",
-                    isProfileCompleted: true // Mark profile as completed
-                }
-            },
-            { new: true, runValidators: true }
-        ).select("-password");
+        // Update text fields
+        if (bio !== undefined) user.bio = bio;
+        if (college !== undefined) user.college = college;
+        if (status !== undefined) user.status = status;
+        if (skills !== undefined) user.skills = parseArray(skills);
+        if (projects !== undefined) user.projects = parseArray(projects);
+        if (hackathonsParticipated !== undefined) user.hackathonsParticipated = parseArray(hackathonsParticipated);
+        if (hackathonsWon !== undefined) user.hackathonsWon = parseArray(hackathonsWon);
+        if (codingPlatforms !== undefined) user.codingPlatforms = parseArray(codingPlatforms);
+        if (socialLinks !== undefined) user.socialLinks = parseArray(socialLinks);
 
-        if (!updatedUser) {
-            return res.status(404).json({ success: false, message: "User not found." });
+        // Handle Profile Picture
+        if (removeProfilePicture === "true") {
+            // Delete from cloudinary if it exists and is not a default dicebear link
+            if (user.profilePicture && user.profilePicture.includes("cloudinary")) {
+                try {
+                    const publicId = user.profilePicture.split("/").pop().split(".")[0];
+                    await cloudinary.uploader.destroy(`hackmeet/avatars/${publicId}`);
+                } catch (err) {
+                    console.error("Cloudinary delete error:", err);
+                }
+            }
+            user.profilePicture = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`;
+        } else if (req.file) {
+            // Delete old one if it exists
+            if (user.profilePicture && user.profilePicture.includes("cloudinary")) {
+                try {
+                    const publicId = user.profilePicture.split("/").pop().split(".")[0];
+                    await cloudinary.uploader.destroy(`hackmeet/avatars/${publicId}`);
+                } catch (err) {
+                    console.error("Cloudinary delete error:", err);
+                }
+            }
+            
+            // Upload new one
+            try {
+                const profilePictureUrl = await uploadToCloudinary(req.file.buffer);
+                user.profilePicture = profilePictureUrl;
+            } catch (error) {
+                return res.status(500).json({ success: false, message: "Image upload failed: " + error.message });
+            }
         }
+
+        // Mark profile as completed if core fields are present
+        if (user.bio && user.college && user.skills?.length > 0) {
+            user.isProfileCompleted = true;
+        }
+
+        await user.save();
+
+        const userWithoutPassword = user.toObject();
+        delete userWithoutPassword.password;
 
         return res.status(200).json({
             success: true,
             message: "Profile updated successfully.",
-            user: updatedUser
+            user: userWithoutPassword
         });
 
     } catch (error) {
         console.error("[updateProfile]", error);
-        return res.status(500).json({ success: false, message: error.message, stack: error.stack });
+        return res.status(500).json({ success: false, message: "Internal server error: " + error.message });
     }
 };

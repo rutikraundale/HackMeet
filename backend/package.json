@@ -29,6 +29,7 @@
     "mongodb": "^7.1.0",
     "mongoose": "^9.3.2",
     "multer": "^2.1.1",
+    "multer-storage-cloudinary": "^4.0.0",
     "socket.io": "^4.8.3",
     "streamifier": "^0.1.1"
   },

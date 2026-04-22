@@ -10,6 +10,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+console.log("Cloudinary Configured with Cloud Name:", process.env.CLOUDINARY_CLOUD_NAME);
+
 /**
  * Uploads a file buffer to Cloudinary via stream
  * @param {Buffer} buffer - The image buffer from multer

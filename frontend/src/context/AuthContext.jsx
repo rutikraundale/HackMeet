@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
 
   // ── Update Profile ───────────────────────────────────────────────────────
   const updateProfile = async (formData) => {
-    const url = `${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/auth/profile`;
+    const url = `${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/users/me/update`;
     const res = await fetch(url, {
       method: "PUT",
       credentials: "include",
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Update failed");
-    setUser(data.user);
+    setUser(data.user || data.data); // Handle both 'user' and 'data' response keys
     return data;
   };
 
