@@ -10,7 +10,7 @@ const Projects = () => {
   const [team, setTeam] = useState(null);
   const [loading, setLoading] = useState(true);
   const [repoLink, setRepoLink] = useState("");
-  const [latestCommit, setLatestCommit] = useState(null);
+  const [latestCommits, setLatestCommits] = useState([]);
   const [fetchingCommit, setFetchingCommit] = useState(false);
   
   const [newTodo, setNewTodo] = useState("");
@@ -53,10 +53,15 @@ const Projects = () => {
     setFetchingCommit(true);
     try {
       const data = await get(`/teams/${team._id}/commits/latest`);
-      if (data.data) {
-          setLatestCommit(data.data);
-          addToast("Fetched latest commit!", "success");
+      if (data.data && Array.isArray(data.data)) {
+          setLatestCommits(data.data);
+          addToast("Fetched latest commits!", "success");
+      } else if (data.data) {
+          // Fallback for single commit
+          setLatestCommits([data.data]);
+          addToast("Fetched latest activity!", "success");
       } else {
+          setLatestCommits([]);
           addToast("No commits found.", "info");
       }
     } catch (err) {
@@ -184,20 +189,24 @@ const Projects = () => {
                   </button>
                 </div>
                 
-                {latestCommit ? (
-                  <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <GitBranch size={16} className="text-blue-400 mt-1" />
-                      <div>
-                        <p className="text-sm font-medium">{latestCommit.commit.message}</p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          by <span className="text-gray-300">{latestCommit.commit.author.name}</span> • {new Date(latestCommit.commit.author.date).toLocaleString()}
-                        </p>
-                        <a href={latestCommit.html_url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline mt-2 inline-block">
-                          View on GitHub →
-                        </a>
+                {latestCommits && latestCommits.length > 0 ? (
+                  <div className="space-y-3">
+                    {latestCommits.map((commit, idx) => (
+                      <div key={idx} className="bg-gray-800 border border-gray-700 rounded-lg p-4 transition hover:border-gray-600">
+                        <div className="flex items-start gap-3">
+                          <GitBranch size={16} className="text-blue-400 mt-1" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium line-clamp-1">{commit.commit.message}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              by <span className="text-gray-300">{commit.commit.author.name}</span> • {new Date(commit.commit.author.date).toLocaleString()}
+                            </p>
+                            <a href={commit.html_url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline mt-2 inline-block">
+                              View on GitHub →
+                            </a>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-xs text-gray-500 italic">Click "Fetch Commits" to see the latest repository activity.</p>

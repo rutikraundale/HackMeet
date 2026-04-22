@@ -107,12 +107,20 @@ export const getRecommendedUsers = async (req, res) => {
 // @access  Private
 export const inviteUser = async (req, res) => {
     try {
+        console.log("Invite Request Body:", req.body);
+        console.log("Invite Request Headers:", req.headers);
+        console.log("Invite Request User:", req.user?._id, "isTeamLeader:", req.user?.isTeamLeader);
+        
         const { targetUserId } = req.body;
         const leaderUser = req.user;
 
+        if (!targetUserId) {
+            return res.status(400).json({ success: false, message: "targetUserId is required." });
+        }
+
         // Verify the caller is a team leader
         if (!leaderUser.isTeamLeader || !leaderUser.teamId) {
-            return res.status(200).json({ success: false, message: "Only team leaders can invite members." });
+            return res.status(403).json({ success: false, message: "Only team leaders can invite members. Please create a team first." });
         }
 
         const teamId = leaderUser.teamId;
@@ -122,19 +130,24 @@ export const inviteUser = async (req, res) => {
         if (!team) return res.status(404).json({ success: false, message: "Team not found." });
         if (team.islocked) return res.status(400).json({ success: false, message: "Team is locked. Cannot invite more users." });
 
-        if (team.members.includes(targetUserId)) {
+        // Robust ID comparison
+        const isAlreadyMember = team.members.some(memberId => memberId.toString() === targetUserId.toString());
+        if (isAlreadyMember) {
             return res.status(400).json({ success: false, message: "User is already a member of this team." });
         }
         
-        if (team.pendingInvites && team.pendingInvites.includes(targetUserId)) {
+        const isAlreadyInvited = team.pendingInvites?.some(inviteId => inviteId.toString() === targetUserId.toString());
+        if (isAlreadyInvited) {
             return res.status(400).json({ success: false, message: "User is already invited." });
         }
 
         const maxLimit = team.hackathonId?.teamsize || 4; // Default to 4 if not set
         const currentSize = team.members.length + (team.pendingInvites?.length || 0);
 
+        console.log(`Team Size Check: Members: ${team.members.length}, Pending: ${team.pendingInvites?.length || 0}, Total: ${currentSize}, Max: ${maxLimit}`);
+
         if (currentSize >= maxLimit) {
-            return res.status(400).json({ success: false, message: `Cannot invite more members. Team size limit (${maxLimit}) reached.` });
+            return res.status(400).json({ success: false, message: `Cannot invite more members. Team size limit (${maxLimit}) reached (including pending invites). Please cancel some pending invites to free up spots.` });
         }
 
         // Add the teamId to the invited user's invitations array using $addToSet
@@ -160,6 +173,14 @@ export const inviteUser = async (req, res) => {
 
     } catch (error) {
         console.error("Error sending invite:", error);
+        
+        if (error.name === "CastError" || error.name === "ValidationError") {
+            return res.status(400).json({ 
+                success: false, 
+                message: error.message || "Invalid ID format or validation failed." 
+            });
+        }
+
         res.status(500).json({ success: false, message: "Failed to send invitation" });
     }
 };
@@ -180,6 +201,15 @@ export const acceptInvitation = async (req, res) => {
         // Verify user isn't already in another team
         if (req.user.teamId) {
              return res.status(400).json({ success: false, message: "You are already in a team. Please leave your current team first." });
+        }
+
+        // Verify team isn't full
+        const teamCheck = await Team.findById(teamId).populate("hackathonId");
+        if (!teamCheck) return res.status(404).json({ success: false, message: "Team not found." });
+        
+        const maxLimit = teamCheck.hackathonId?.teamsize || 4;
+        if (teamCheck.members.length >= maxLimit) {
+            return res.status(400).json({ success: false, message: "Team is already full. Cannot join." });
         }
 
         // Add user to team and remove from pendingInvites
@@ -246,6 +276,42 @@ export const declineInvitation = async (req, res) => {
     }
 };
 
+// @desc    Cancel a sent invitation
+// @route   POST /api/teams/cancel-invite
+// @access  Private (Leader only)
+export const cancelInvite = async (req, res) => {
+    try {
+        const { targetUserId } = req.body;
+        const leaderUser = req.user;
+
+        if (!leaderUser.isTeamLeader || !leaderUser.teamId) {
+            return res.status(403).json({ success: false, message: "Only team leaders can cancel invites." });
+        }
+
+        const teamId = leaderUser.teamId;
+
+        // Remove from team's pendingInvites
+        await Team.findByIdAndUpdate(
+            teamId,
+            { $pull: { pendingInvites: targetUserId } }
+        );
+
+        // Remove from user's invitations
+        await User.findByIdAndUpdate(
+            targetUserId,
+            { $pull: { invitations: teamId } }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Invitation cancelled successfully."
+        });
+    } catch (error) {
+        console.error("Error cancelling invite:", error);
+        res.status(500).json({ success: false, message: "Failed to cancel invitation" });
+    }
+};
+
 // @desc    Fetch latest commit from team's github repo
 // @route   GET /api/teams/:id/commits/latest
 // @access  Private
@@ -293,7 +359,7 @@ export const getLatestCommit = async (req, res) => {
 
         res.status(200).json({
              success: true,
-             data: commits[0] // Return only the most recent commit
+             data: commits.slice(0, 5) // Return the 5 most recent commits
         });
 
     } catch (error) {

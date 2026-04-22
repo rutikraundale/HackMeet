@@ -110,7 +110,13 @@ export const login = async (req, res) => {
         }
 
         // ── Find user ─────────────────────────────────────────────────────────
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).populate({
+            path: "invitations",
+            populate: [
+                { path: "hackathonId", select: "name" },
+                { path: "teamLeader", select: "username profilePicture" }
+            ]
+        });
         if (!user) {
             return res.status(200).json({
                 success: false,
@@ -183,7 +189,15 @@ export const refreshToken = async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
 
         // Make sure user still exists
-        const user = await User.findById(decoded.userId).select("-password");
+        const user = await User.findById(decoded.userId)
+            .select("-password")
+            .populate({
+                path: "invitations",
+                populate: [
+                    { path: "hackathonId", select: "name" },
+                    { path: "teamLeader", select: "username profilePicture" }
+                ]
+            });
         if (!user) {
             return res.status(401).json({
                 success: false,
@@ -223,7 +237,7 @@ export const getMe = async (req, res) => {
                 path: "invitations",
                 populate: [
                     { path: "hackathonId", select: "name" },
-                    { path: "teamLeader", select: "username" }
+                    { path: "teamLeader", select: "username profilePicture" }
                 ]
             });
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Search } from 'lucide-react';
 import UserCard from '../components/UserCard';
 import LoadingSkeleton from '../components/LoadingSkeleton';
@@ -28,32 +28,36 @@ const TeamBuilder = () => {
 
   const mySkills = user?.skills || [];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [usersData, hacksData] = await Promise.all([
-          get("/users"),
-          get("/hackathons"),
-        ]);
-        setDevelopers(usersData.data || []);
-        setHackathons(hacksData.data || []);
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [usersData, hacksData] = await Promise.all([
+        get("/users"),
+        get("/hackathons"),
+      ]);
+      setDevelopers(usersData.data || []);
+      setHackathons(hacksData.data || []);
 
-        if (user?.teamId) {
-          const teamData = await get("/teams/my-team");
-          if (teamData.success) {
-            setMyTeam(teamData.data);
-            const pendingIds = (teamData.data.pendingInvites || []).map(i => i._id || i);
-            setInvitesSent(pendingIds);
-          }
+      if (user?.teamId) {
+        const teamData = await get("/teams/my-team");
+        if (teamData.success && teamData.data) {
+          setMyTeam(teamData.data);
+          const pendingIds = (teamData.data.pendingInvites || []).map(i => 
+            (typeof i === 'object' ? i._id?.toString() : i?.toString())
+          ).filter(Boolean);
+          setInvitesSent(pendingIds);
         }
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
-      } finally {
-        setLoading(false);
       }
-    };
-    fetchData();
+    } catch (err) {
+      console.error("Failed to fetch data:", err);
+    } finally {
+      setLoading(false);
+    }
   }, [user?.teamId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const ALL_SKILLS = [...new Set(developers.flatMap((d) => d.skills || []))];
 
@@ -87,6 +91,7 @@ const TeamBuilder = () => {
   };
 
   const handleInvite = async (userId) => {
+    console.log("HandleInvite called with userId:", userId, typeof userId);
     if (invitesSent.includes(userId)) return;
     try {
       await post("/teams/invite", { targetUserId: userId });
@@ -97,12 +102,22 @@ const TeamBuilder = () => {
     }
   };
 
+  const handleCancelInvite = async (userId) => {
+    try {
+      await post("/teams/cancel-invite", { targetUserId: userId });
+      setInvitesSent(invitesSent.filter(id => id !== userId));
+      addToast('Invite cancelled', 'info');
+    } catch (err) {
+      addToast(err.message || 'Failed to cancel invite', 'error');
+    }
+  };
+
   const filteredDevelopers = skillFilter
     ? developers.filter(dev => (dev.skills || []).includes(skillFilter))
     : developers;
 
   const mapUser = (dev) => ({
-    id: dev._id,
+    id: dev._id?.toString() || dev.id?.toString() || dev._id,
     name: dev.username,
     role: dev.college || "Developer",
     location: dev.college || "",
@@ -145,6 +160,12 @@ const TeamBuilder = () => {
             📤 Sent Invites ({invitesSent.length})
           </button>
         )}
+        <button 
+          onClick={fetchData}
+          className="ml-auto text-xs text-blue-400 hover:underline mb-3"
+        >
+          🔄 Refresh Data
+        </button>
       </div>
 
       {/* CREATE TEAM TAB */}
@@ -197,6 +218,28 @@ const TeamBuilder = () => {
                 </button>
               </div>
             </div>
+
+            {myTeam && (
+              <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 mt-6">
+                <h3 className="text-lg font-semibold mb-4 text-blue-400">My Team: {myTeam.teamName}</h3>
+                <div className="space-y-3">
+                  {myTeam.members.map((member) => (
+                    <div key={member._id} className="flex items-center gap-3 p-2 bg-slate-700/50 rounded-lg">
+                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">
+                        {member.username.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{member.username} {member._id === user._id && "(You)"}</p>
+                        <p className="text-xs text-gray-400">{member.college || "Developer"}</p>
+                      </div>
+                      {member._id === myTeam.teamLeader && (
+                        <span className="ml-auto text-[10px] bg-amber-500/20 text-amber-500 px-2 py-0.5 rounded border border-amber-500/30">Leader</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* User List with Skill Filter */}
@@ -239,17 +282,30 @@ const TeamBuilder = () => {
                 ))}
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 gap-4">
-                {filteredDevelopers.map(dev => (
-                  <UserCard
-                    key={dev._id}
-                    user={mapUser(dev)}
-                    compatibility={calcMatch(dev.skills)}
-                    onInvite={(!user?.teamId || user?.isTeamLeader) ? handleInvite : null}
-                    isInvited={invitesSent.includes(dev._id)}
-                  />
-                ))}
-              </div>
+              <>
+                {!user?.teamId && (
+                  <div className="mb-6 p-4 bg-blue-900/20 border border-blue-500/30 rounded-xl text-blue-400">
+                    <p className="font-medium">Want to build a team? 🚀</p>
+                    <p className="text-sm opacity-80">Create your team on the left to start inviting talented developers!</p>
+                  </div>
+                )}
+                <div className="grid md:grid-cols-2 gap-4">
+                  {(() => {
+                    const isTeamFull = myTeam && (myTeam.members.length + invitesSent.length) >= (myTeam.hackathonId?.teamsize || 4);
+                    
+                    return filteredDevelopers.filter(dev => !myTeam?.members.some(m => m._id === dev._id)).map(dev => (
+                      <UserCard
+                        key={dev._id}
+                        user={mapUser(dev)}
+                        compatibility={calcMatch(dev.skills)}
+                        onInvite={user?.isTeamLeader ? handleInvite : null}
+                        isInvited={invitesSent.some(id => id.toString() === dev._id?.toString())}
+                        isFull={isTeamFull}
+                      />
+                    ));
+                  })()}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -281,12 +337,24 @@ const TeamBuilder = () => {
                         <p className="text-gray-400 text-sm">{dev.college || "Developer"}</p>
                       </div>
                     </div>
-                    <p className="text-gray-400 text-sm mb-4">Invite sent ✓</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-gray-400 text-sm">Invite sent ✓</p>
+                      <button
+                        onClick={() => handleCancelInvite(dev._id)}
+                        className="text-xs text-red-400 hover:text-red-300 transition underline"
+                      >
+                        Cancel Invite
+                      </button>
+                    </div>
                   </div>
                 );
               })}
             </div>
-          ) : null}
+          ) : (
+            <div className="text-center py-12 bg-slate-800/50 rounded-xl border border-dashed border-slate-700">
+              <p className="text-gray-500">No pending invites sent yet.</p>
+            </div>
+          )}
         </div>
       )}
     </div>

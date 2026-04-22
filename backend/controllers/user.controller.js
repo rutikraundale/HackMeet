@@ -77,7 +77,14 @@ export const getMyProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user._id)
             .select("-password")
-            .populate("teamId");
+            .populate("teamId")
+            .populate({
+                path: "invitations",
+                populate: [
+                    { path: "hackathonId", select: "name" },
+                    { path: "teamLeader", select: "username profilePicture" }
+                ]
+            });
 
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });

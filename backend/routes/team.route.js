@@ -14,7 +14,8 @@ import {
     getOpenTeams,
     requestToJoin,
     acceptJoinRequest,
-    rejectJoinRequest
+    rejectJoinRequest,
+    cancelInvite
 } from "../controllers/team.controller.js";
 import verifyAccessToken from "../middleware/verifyToken.js";
 
@@ -36,6 +37,9 @@ router.get("/recommendations", getRecommendedUsers);
 
 // Route for team leaders to invite a user
 router.post("/invite", inviteUser);
+
+// Route to cancel an invite
+router.post("/cancel-invite", cancelInvite);
 
 // Routes to respond to an invitation
 router.post("/accept-invite/:teamId", acceptInvitation);

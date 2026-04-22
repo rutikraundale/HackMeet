@@ -46,7 +46,7 @@ const Discover = () => {
   };
 
   const filtered = useMemo(() => {
-    return developers.filter((d) => {
+    const list = developers.filter((d) => {
       // Don't show the current user in discover
       if (user && d._id === user._id) return false;
       const q = search.toLowerCase();
@@ -54,7 +54,10 @@ const Discover = () => {
       const matchSkills = selectedSkills.length === 0 || selectedSkills.some((s) => (d.skills || []).includes(s));
       return matchSearch && matchSkills;
     });
-  }, [search, selectedSkills, developers, user]);
+
+    // Sort by compatibility percentage (descending)
+    return list.sort((a, b) => calcMatch(b.skills) - calcMatch(a.skills));
+  }, [search, selectedSkills, developers, user, mySkills]);
 
   // Map backend user to UserCard format
   const mapUser = (dev) => ({
