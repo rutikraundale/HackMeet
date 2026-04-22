@@ -14,6 +14,7 @@ const TeamBuilder = () => {
   const [developers, setDevelopers] = useState([]);
   const [hackathons, setHackathons] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [myTeam, setMyTeam] = useState(null);
   const { addToast } = useToast();
   const { user, checkAuth } = useAuth();
   const location = useLocation();
@@ -36,6 +37,15 @@ const TeamBuilder = () => {
         ]);
         setDevelopers(usersData.data || []);
         setHackathons(hacksData.data || []);
+
+        if (user?.teamId) {
+          const teamData = await get("/teams/my-team");
+          if (teamData.success) {
+            setMyTeam(teamData.data);
+            const pendingIds = (teamData.data.pendingInvites || []).map(i => i._id || i);
+            setInvitesSent(pendingIds);
+          }
+        }
       } catch (err) {
         console.error("Failed to fetch data:", err);
       } finally {
@@ -43,7 +53,7 @@ const TeamBuilder = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [user?.teamId]);
 
   const ALL_SKILLS = [...new Set(developers.flatMap((d) => d.skills || []))];
 
@@ -97,7 +107,7 @@ const TeamBuilder = () => {
     role: dev.college || "Developer",
     location: dev.college || "",
     skills: dev.skills || [],
-    status: dev.teamId ? "busy" : "open",
+    status: dev.status || (dev.teamId ? "busy" : "open"),
     initials: (dev.username || "??").slice(0, 2).toUpperCase(),
     color: `hsl(${(dev.username || "").length * 40}, 40%, 25%)`,
     profilePicture: dev.profilePicture,
@@ -123,16 +133,18 @@ const TeamBuilder = () => {
         >
           📝 Create Team
         </button>
-        <button
-          onClick={() => setActiveTab('invites')}
-          className={`pb-3 font-medium transition ${
-            activeTab === 'invites'
-              ? 'border-b-2 border-blue-500 text-blue-400'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          📤 Sent Invites ({invitesSent.length})
-        </button>
+        {user?.isTeamLeader && (
+          <button
+            onClick={() => setActiveTab('invites')}
+            className={`pb-3 font-medium transition ${
+              activeTab === 'invites'
+                ? 'border-b-2 border-blue-500 text-blue-400'
+                : 'text-gray-400 hover:text-gray-300'
+            }`}
+          >
+            📤 Sent Invites ({invitesSent.length})
+          </button>
+        )}
       </div>
 
       {/* CREATE TEAM TAB */}
@@ -233,7 +245,7 @@ const TeamBuilder = () => {
                     key={dev._id}
                     user={mapUser(dev)}
                     compatibility={calcMatch(dev.skills)}
-                    onInvite={handleInvite}
+                    onInvite={(!user?.teamId || user?.isTeamLeader) ? handleInvite : null}
                     isInvited={invitesSent.includes(dev._id)}
                   />
                 ))}
@@ -274,13 +286,7 @@ const TeamBuilder = () => {
                 );
               })}
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-800/30 rounded-xl border border-slate-700">
-              <div className="text-4xl mb-4">📤</div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">No Invites Sent</h3>
-              <p className="text-gray-400">Start inviting developers to your team!</p>
-            </div>
-          )}
+          ) : null}
         </div>
       )}
     </div>

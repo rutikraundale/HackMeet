@@ -73,9 +73,11 @@ const userSchema = new mongoose.Schema({
         ref:"Team",
         required:false
     },
-    
-        
-    
+    status: {
+        type: String,
+        enum: ["open", "busy"],
+        default: "open"
+    }
 }, { timestamps: true });
 
 const User = mongoose.model("User", userSchema);

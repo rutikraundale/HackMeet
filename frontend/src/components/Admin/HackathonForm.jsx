@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { post } from "../../utils/api";
 import {
   Plus,
   Trophy,
@@ -16,16 +17,17 @@ import {
  * Props:
  *  - onCreated (function): called with the new hackathon payload after a successful submit
  */
-const HackathonForm = ({ onCreated }) => {
+
+const HackathonForm = ({ onCreated, initialData = null, isEditing = false }) => {
   // ── Form field state ────────────────────────────────────────────────────────
   const [form, setForm] = useState({
-    name: "",
-    description: "",
-    startDate: "",
-    endDate: "",
-    location: "",
-    teamsize: "",
-    prizes: "",
+    name: initialData?.name || "",
+    description: initialData?.description || "",
+    startDate: initialData?.startDate ? new Date(initialData.startDate).toISOString().split('T')[0] : "",
+    endDate: initialData?.endDate ? new Date(initialData.endDate).toISOString().split('T')[0] : "",
+    location: initialData?.location || "",
+    teamsize: initialData?.teamsize || "",
+    prizes: initialData?.prizes ? initialData.prizes.join(", ") : "",
   });
 
   // Tracks which fields have validation errors
@@ -60,7 +62,7 @@ const HackathonForm = ({ onCreated }) => {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Run validation first
     const e = validate();
     if (Object.keys(e).length > 0) {
@@ -70,8 +72,7 @@ const HackathonForm = ({ onCreated }) => {
 
     setLoading(true);
 
-    // Simulate a network request (replace with real API call when ready)
-    setTimeout(() => {
+    try {
       const payload = {
         ...form,
         teamsize: Number(form.teamsize),
@@ -81,25 +82,32 @@ const HackathonForm = ({ onCreated }) => {
           : [],
       };
 
-      onCreated(payload); // notify parent
-
-      // Reset form after success
-      setForm({
-        name: "",
-        description: "",
-        startDate: "",
-        endDate: "",
-        location: "",
-        teamsize: "",
-        prizes: "",
-      });
-      setErrors({});
-      setSuccess(true);
+      if (!isEditing) {
+        const response = await post("/admin/hackathons", payload);
+        if (response.success) {
+          onCreated(response.data);
+          // Reset form after success
+          setForm({
+            name: "",
+            description: "",
+            startDate: "",
+            endDate: "",
+            location: "",
+            teamsize: "",
+            prizes: "",
+          });
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3500);
+        }
+      } else {
+        // Edit mode: parent handles the PUT request or we do it here if we pass down the ID
+        onCreated(payload); 
+      }
+    } catch (err) {
+      setErrors({ global: err.message || "Failed to save hackathon" });
+    } finally {
       setLoading(false);
-
-      // Hide the success banner after 3.5 seconds
-      setTimeout(() => setSuccess(false), 3500);
-    }, 800);
+    }
   };
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -120,8 +128,8 @@ const HackathonForm = ({ onCreated }) => {
           <Trophy size={18} className="text-blue-400" />
         </div>
         <div>
-          <h2 className="text-white font-semibold text-lg">New Hackathon</h2>
-          <p className="text-gray-400 text-xs">Fill in all details to publish</p>
+          <h2 className="text-white font-semibold text-lg">{isEditing ? "Edit Hackathon" : "New Hackathon"}</h2>
+          <p className="text-gray-400 text-xs">{isEditing ? "Update details and save changes" : "Fill in all details to publish"}</p>
         </div>
       </div>
 
@@ -129,7 +137,13 @@ const HackathonForm = ({ onCreated }) => {
       {success && (
         <div className="mb-5 flex items-center gap-3 bg-green-900/30 border border-green-500/40 rounded-lg px-4 py-3 text-green-300 text-sm">
           <CheckCircle size={16} />
-          Hackathon created successfully!
+          Hackathon {isEditing ? "updated" : "created"} successfully!
+        </div>
+      )}
+
+      {errors.global && (
+        <div className="mb-5 bg-red-900/30 border border-red-500/40 rounded-lg px-4 py-3 text-red-300 text-sm">
+          {errors.global}
         </div>
       )}
 

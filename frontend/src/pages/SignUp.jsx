@@ -10,6 +10,8 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [bio, setBio] = useState("");
   const [college, setCollege] = useState("");
+  const [socialLinks, setSocialLinks] = useState("");
+  const [profilePicture, setProfilePicture] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [skillInput, setSkillInput] = useState("");
   const [skills, setSkills] = useState([]);
@@ -55,7 +57,24 @@ const SignUp = () => {
     }
     setLoading(true);
     try {
-      await signup({ username, email, password, bio, college, skills });
+      const parsedSocialLinks = socialLinks
+        .split(",")
+        .map((link) => link.trim())
+        .filter(Boolean);
+
+      const formData = new FormData();
+      formData.append("username", username);
+      formData.append("email", email);
+      formData.append("password", password);
+      if (bio) formData.append("bio", bio);
+      if (college) formData.append("college", college);
+      skills.forEach(skill => formData.append("skills", skill));
+      parsedSocialLinks.forEach(link => formData.append("socialLinks", link));
+      if (profilePicture) {
+        formData.append("profilePicture", profilePicture);
+      }
+
+      await signup(formData);
       addToast("Account created successfully! 🎉", "success");
       navigate("/login");
     } catch (err) {
@@ -146,11 +165,29 @@ const SignUp = () => {
               </h3>
 
               <div className="space-y-4">
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">Profile Picture (Optional)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setProfilePicture(e.target.files[0])}
+                    className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-900/30 file:text-blue-400 hover:file:bg-blue-900/50 cursor-pointer"
+                  />
+                </div>
+
                 <input
                   type="text"
                   value={college}
                   onChange={(e) => setCollege(e.target.value)}
                   placeholder="College / Organization"
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
+                />
+
+                <input
+                  type="text"
+                  value={socialLinks}
+                  onChange={(e) => setSocialLinks(e.target.value)}
+                  placeholder="Coding Profiles / Social URLs (comma-separated)"
                   className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
                 />
 

@@ -33,6 +33,10 @@ const teamSchema=new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     }],
+    joinRequests: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
     todos: [{
         id: { type: String, required: true },
         text: { type: String, required: true },

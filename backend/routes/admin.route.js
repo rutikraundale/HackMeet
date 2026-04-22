@@ -1,5 +1,12 @@
 import express from "express";
-import { createHackathon, getHackathonsSegmented, getAllTeams } from "../controllers/admin.controller.js";
+import { 
+    createHackathon, 
+    getHackathonsSegmented, 
+    getAllTeams, 
+    updateHackathon, 
+    deleteHackathon, 
+    terminateHackathon 
+} from "../controllers/admin.controller.js";
 import verifyAccessToken from "../middleware/verifyToken.js";
 import verifyAdmin from "../middleware/verifyAdmin.js";
 
@@ -11,6 +18,9 @@ router.use(verifyAdmin);
 
 router.post("/hackathons", createHackathon);
 router.get("/hackathons", getHackathonsSegmented);
+router.put("/hackathons/:id", updateHackathon);
+router.delete("/hackathons/:id", deleteHackathon);
+router.patch("/hackathons/:id/terminate", terminateHackathon);
 router.get("/teams", getAllTeams);
 
 export default router;

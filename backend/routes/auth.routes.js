@@ -13,7 +13,7 @@ import upload from "../middleware/multer.js";
 const router = Router();
 
 // ── Public routes ─────────────────────────────────────────────────────────────
-router.post("/signup", signup);
+router.post("/signup", upload.single("profilePicture"), signup);
 router.post("/login", login);
 router.post("/logout", logout);
 router.post("/refresh-token", refreshToken);

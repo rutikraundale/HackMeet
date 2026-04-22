@@ -8,7 +8,7 @@ import { uploadToCloudinary } from "../utils/cloudinary.js";
 //  POST /api/auth/signup
 // ─────────────────────────────────────────────────────────────────────────────
 export const signup = async (req, res) => {
-    const { username, email, password, bio, college, skills } = req.body;
+    const { username, email, password, bio, college, skills, socialLinks } = req.body;
 
     try {
         // ── Validate input ────────────────────────────────────────────────────
@@ -36,9 +36,35 @@ export const signup = async (req, res) => {
             });
         }
 
+        // ── Upload Image or Set Default ───────────────────────────────────────
+        let profilePictureUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`;
+        if (req.file) {
+            try {
+                profilePictureUrl = await uploadToCloudinary(req.file.buffer);
+            } catch (error) {
+                return res.status(500).json({ success: false, message: "Image upload failed: " + error.message });
+            }
+        }
+
         // ── Hash password ─────────────────────────────────────────────────────
         const salt = await bcrypt.genSalt(12);
         const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Helper to parse potential stringified JSON arrays from FormData
+        const parseArray = (field) => {
+            if (field === undefined || field === null) return [];
+            if (Array.isArray(field)) return field;
+            if (typeof field === 'object') return Object.values(field).map(String);
+            if (typeof field !== 'string') return [String(field)];
+            
+            try {
+                const parsed = JSON.parse(field);
+                return Array.isArray(parsed) ? parsed.map(String) : [String(parsed)];
+            } catch (e) {
+                // Return as an array with a single string entry if it's just a comma-separated string or normal string
+                return field.split(',').map(item => item.trim()).filter(Boolean);
+            }
+        };
 
         // ── Create user ───────────────────────────────────────────────────────
         const newUser = await User.create({
@@ -47,7 +73,9 @@ export const signup = async (req, res) => {
             password: hashedPassword,
             bio,
             college,
-            skills: skills || []
+            profilePicture: profilePictureUrl,
+            skills: parseArray(skills),
+            socialLinks: parseArray(socialLinks)
         });
 
         // ── Issue tokens ──────────────────────────────────────────────────────
@@ -223,13 +251,16 @@ export const updateProfile = async (req, res) => {
             hackathonsParticipated,
             hackathonsWon,
             codingPlatforms,
-            socialLinks
+            socialLinks,
+            status,
+            removeProfilePicture
         } = req.body;
 
         let profilePictureUrl = req.user.profilePicture;
 
-        // Extract image from req.file and upload it
-        if (req.file) {
+        if (removeProfilePicture === "true") {
+            profilePictureUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${req.user.username}`;
+        } else if (req.file) {
             try {
                 profilePictureUrl = await uploadToCloudinary(req.file.buffer);
             } catch (error) {
@@ -249,7 +280,7 @@ export const updateProfile = async (req, res) => {
                 return Array.isArray(parsed) ? parsed.map(String) : [String(parsed)];
             } catch (e) {
                 // Return as an array with a single string entry if it's just a comma-separated string or normal string
-                return field.split(',').map(item => item.trim());
+                return field.split(',').map(item => item.trim()).filter(Boolean);
             }
         };
 
@@ -266,6 +297,7 @@ export const updateProfile = async (req, res) => {
                     codingPlatforms: parseArray(codingPlatforms),
                     socialLinks: parseArray(socialLinks),
                     profilePicture: profilePictureUrl,
+                    status: status || "open",
                     isProfileCompleted: true // Mark profile as completed
                 }
             },
@@ -284,6 +316,6 @@ export const updateProfile = async (req, res) => {
 
     } catch (error) {
         console.error("[updateProfile]", error);
-        return res.status(500).json({ success: false, message: "Internal server error." });
+        return res.status(500).json({ success: false, message: error.message, stack: error.stack });
     }
 };

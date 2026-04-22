@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { get } from "../utils/api";
+import { useAuth } from "../context/AuthContext";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [hackathons, setHackathons] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,6 +27,7 @@ const Dashboard = () => {
   const handleAction = (type, hackathon) => {
     switch (type) {
       case "CREATE_TEAM":
+        if (user?.teamId) return;
         navigate("/team-builder", { state: { hackathonId: hackathon._id, hackathonName: hackathon.name } });
         break;
       case "VIEW_DETAILS":
@@ -83,6 +86,7 @@ const Dashboard = () => {
         <div className="grid sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {displayHackathons.map((hack) => {
             const isLive = new Date(hack.startDate) <= now && new Date(hack.endDate) >= now;
+            const isParticipating = !!user?.teamId;
             return (
               <div
                 key={hack._id}
@@ -113,9 +117,14 @@ const Dashboard = () => {
                 <div className="flex gap-3 mt-4">
                   <button
                     onClick={() => handleAction("CREATE_TEAM", hack)}
-                    className="bg-green-600 px-3 py-2 rounded-lg hover:bg-green-500 text-sm"
+                    disabled={isParticipating}
+                    className={`px-3 py-2 rounded-lg text-sm transition ${
+                      isParticipating 
+                        ? "bg-gray-700 text-gray-400 cursor-not-allowed border border-gray-600" 
+                        : "bg-green-600 hover:bg-green-500 text-white"
+                    }`}
                   >
-                    Create Team
+                    {isParticipating ? "Participated" : "Create Team"}
                   </button>
                   <button
                     onClick={() => handleAction("VIEW_DETAILS", hack)}
@@ -131,23 +140,34 @@ const Dashboard = () => {
       )}
 
       {/* Matchmaking Section */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mt-8 flex justify-between items-center">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mt-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-xl font-semibold">Can't find a partner?</h2>
-          <p className="text-gray-400 mt-1">
-            Join matchmaking pool and get paired with builders.
+          <h2 className="text-xl font-semibold">Looking for a team or developers?</h2>
+          <p className="text-gray-400 mt-1 max-w-xl">
+            Whether you want to recruit talent for your startup idea or join an existing squad, our matchmaking tools have you covered.
           </p>
-          <button
-            onClick={() => navigate("/discover")}
-            className="mt-4 bg-white text-black px-4 py-2 rounded-lg hover:bg-gray-200 transition"
-          >
-            Join Matchmaking
-          </button>
+          <div className="flex flex-wrap gap-4 mt-5">
+            <button
+              onClick={() => navigate("/discover")}
+              className="bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 transition font-medium flex items-center gap-2"
+            >
+              🔍 Find Developers
+            </button>
+            <button
+              onClick={() => navigate("/find-teams")}
+              className="bg-slate-800 text-white border border-slate-700 px-5 py-2.5 rounded-lg hover:bg-slate-700 transition font-medium flex items-center gap-2"
+            >
+              👥 Find Teams
+            </button>
+          </div>
         </div>
 
-        <div className="flex -space-x-3">
-          <div className="w-10 h-10 flex items-center justify-center bg-gray-700 rounded-full text-sm">
-            +42
+        <div className="flex -space-x-4 shrink-0 mt-4 md:mt-0">
+          <div className="w-12 h-12 rounded-full border-2 border-slate-900 bg-blue-900 flex items-center justify-center text-xs font-bold text-white z-30">AJ</div>
+          <div className="w-12 h-12 rounded-full border-2 border-slate-900 bg-green-900 flex items-center justify-center text-xs font-bold text-white z-20">MK</div>
+          <div className="w-12 h-12 rounded-full border-2 border-slate-900 bg-purple-900 flex items-center justify-center text-xs font-bold text-white z-10">JS</div>
+          <div className="w-12 h-12 flex items-center justify-center bg-slate-800 rounded-full border-2 border-slate-900 text-xs text-gray-400 z-0">
+            +99
           </div>
         </div>
       </div>

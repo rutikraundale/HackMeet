@@ -93,15 +93,15 @@ const UserCard = ({ user, compatibility, onInvite, isInvited }) => {
         {onInvite && (
           <button
             onClick={() => onInvite(user.id)}
-            disabled={isInvited}
+            disabled={isInvited || user.status === 'busy'}
             className={`flex-1 px-2 py-2 rounded-lg text-sm transition flex items-center justify-center gap-1 ${
-              isInvited
+              isInvited || user.status === 'busy'
                 ? 'bg-slate-700 text-gray-500 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
             }`}
           >
             <UserPlus size={14} />
-            {isInvited ? 'Invited' : 'Invite'}
+            {isInvited ? 'Invited' : user.status === 'busy' ? 'Busy' : 'Invite'}
           </button>
         )}
       </div>

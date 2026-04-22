@@ -7,13 +7,23 @@ import {
     acceptInvitation, 
     declineInvitation,
     getLatestCommit,
-    updateTeam
+    updateTeam,
+    deleteTeam,
+    removeMember,
+    leaveTeam,
+    getOpenTeams,
+    requestToJoin,
+    acceptJoinRequest,
+    rejectJoinRequest
 } from "../controllers/team.controller.js";
 import verifyAccessToken from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
 router.use(verifyAccessToken);
+
+// Route to get all teams with open spots
+router.get("/open", getOpenTeams);
 
 // Route to create a new team, automatically makes caller the teamLeader
 router.post("/", createTeam);
@@ -31,10 +41,26 @@ router.post("/invite", inviteUser);
 router.post("/accept-invite/:teamId", acceptInvitation);
 router.post("/decline-invite/:teamId", declineInvitation);
 
+// Route to request to join a team
+router.post("/:id/request", requestToJoin);
+
+// Routes for team leaders to accept or reject join requests
+router.post("/:id/accept-request/:userId", acceptJoinRequest);
+router.post("/:id/reject-request/:userId", rejectJoinRequest);
+
 // Route to get GitHub Repo activity natively
 router.get("/:id/commits/latest", getLatestCommit);
 
-// Route to update team (e.g. gitRepoLink, todos)
+// Route to update team (e.g. gitRepoLink, todos, teamName)
 router.put("/:id", updateTeam);
+
+// Route to delete team (Leader only)
+router.delete("/:id", deleteTeam);
+
+// Route to remove member (Leader only)
+router.delete("/:teamId/members/:memberId", removeMember);
+
+// Route to leave team (Members only)
+router.post("/leave", leaveTeam);
 
 export default router;

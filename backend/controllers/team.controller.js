@@ -56,6 +56,7 @@ export const getMyTeam = async (req, res) => {
         const team = await Team.findById(user.teamId)
             .populate("members", "username email college profilePicture skills")
             .populate("pendingInvites", "username email college profilePicture")
+            .populate("joinRequests", "username email college profilePicture skills")
             .populate("teamLeader", "username")
             .populate("hackathonId", "name startDate endDate teamsize");
 
@@ -301,13 +302,13 @@ export const getLatestCommit = async (req, res) => {
     }
 };
 
-// @desc    Update team details (e.g. gitRepoLink, todos)
+// @desc    Update team details (e.g. gitRepoLink, todos, teamName)
 // @route   PUT /api/teams/:id
 // @access  Private
 export const updateTeam = async (req, res) => {
     try {
         const { id } = req.params;
-        const { gitRepoLink, todos } = req.body;
+        const { gitRepoLink, todos, teamName } = req.body;
         const userId = req.user._id;
 
         const team = await Team.findById(id);
@@ -323,6 +324,14 @@ export const updateTeam = async (req, res) => {
         if (gitRepoLink !== undefined) team.gitRepoLink = gitRepoLink;
         if (todos !== undefined) team.todos = todos;
 
+        // Only leader can update the name
+        if (teamName !== undefined) {
+            if (team.teamLeader.toString() !== userId.toString()) {
+                return res.status(403).json({ success: false, message: "Only the team leader can change the team name." });
+            }
+            team.teamName = teamName;
+        }
+
         await team.save();
 
         res.status(200).json({
@@ -333,5 +342,251 @@ export const updateTeam = async (req, res) => {
     } catch (error) {
         console.error("Error updating team:", error);
         res.status(500).json({ success: false, message: "Failed to update team." });
+    }
+};
+
+// @desc    Delete a team
+// @route   DELETE /api/teams/:id
+// @access  Private (Leader only)
+export const deleteTeam = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id;
+
+        const team = await Team.findById(id);
+        if (!team) return res.status(404).json({ success: false, message: "Team not found." });
+
+        if (team.teamLeader.toString() !== userId.toString()) {
+            return res.status(403).json({ success: false, message: "Only the team leader can delete the team." });
+        }
+
+        // Unset teamId for all members
+        await User.updateMany(
+            { _id: { $in: team.members } },
+            { $unset: { teamId: "" }, isTeamLeader: false }
+        );
+
+        // Also remove team from any pending invites
+        if (team.pendingInvites && team.pendingInvites.length > 0) {
+            await User.updateMany(
+                { _id: { $in: team.pendingInvites } },
+                { $pull: { invitations: team._id } }
+            );
+        }
+
+        await Team.findByIdAndDelete(id);
+
+        res.status(200).json({ success: true, message: "Team deleted successfully." });
+    } catch (error) {
+        console.error("Error deleting team:", error);
+        res.status(500).json({ success: false, message: "Failed to delete team." });
+    }
+};
+
+// @desc    Remove a member from the team
+// @route   DELETE /api/teams/:teamId/members/:memberId
+// @access  Private (Leader only)
+export const removeMember = async (req, res) => {
+    try {
+        const { teamId, memberId } = req.params;
+        const leaderId = req.user._id;
+
+        const team = await Team.findById(teamId);
+        if (!team) return res.status(404).json({ success: false, message: "Team not found." });
+
+        if (team.teamLeader.toString() !== leaderId.toString()) {
+            return res.status(403).json({ success: false, message: "Only the team leader can remove members." });
+        }
+
+        if (leaderId.toString() === memberId.toString()) {
+            return res.status(400).json({ success: false, message: "You cannot remove yourself. Delete the team instead." });
+        }
+
+        if (!team.members.includes(memberId)) {
+             return res.status(400).json({ success: false, message: "User is not a member of this team." });
+        }
+
+        // Remove from team members array
+        team.members = team.members.filter(id => id.toString() !== memberId.toString());
+        await team.save();
+
+        // Update the removed user's record
+        await User.findByIdAndUpdate(memberId, { $unset: { teamId: "" } });
+
+        res.status(200).json({ success: true, message: "Member removed successfully." });
+    } catch (error) {
+        console.error("Error removing member:", error);
+        res.status(500).json({ success: false, message: "Failed to remove member." });
+    }
+};
+
+// @desc    Leave the current team
+// @route   POST /api/teams/leave
+// @access  Private (Members only)
+export const leaveTeam = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const teamId = req.user.teamId;
+
+        if (!teamId) {
+            return res.status(400).json({ success: false, message: "You are not in a team." });
+        }
+
+        const team = await Team.findById(teamId);
+        if (!team) return res.status(404).json({ success: false, message: "Team not found." });
+
+        if (team.teamLeader.toString() === userId.toString()) {
+            return res.status(400).json({ success: false, message: "Team leader cannot leave. You must delete the team or transfer leadership." });
+        }
+
+        // Remove user from team members
+        team.members = team.members.filter(id => id.toString() !== userId.toString());
+        await team.save();
+
+        // Update user record
+        await User.findByIdAndUpdate(userId, { $unset: { teamId: "" } });
+
+        res.status(200).json({ success: true, message: "You have left the team successfully." });
+    } catch (error) {
+        console.error("Error leaving team:", error);
+        res.status(500).json({ success: false, message: "Failed to leave team." });
+    }
+};
+
+// @desc    Get all teams with vacant members
+// @route   GET /api/teams/open
+// @access  Private
+export const getOpenTeams = async (req, res) => {
+    try {
+        const teams = await Team.find({ islocked: false })
+            .populate("hackathonId", "name startDate endDate teamsize status")
+            .populate("teamLeader", "username profilePicture college")
+            .populate("members", "username");
+
+        // Filter out teams that are full
+        const openTeams = teams.filter(team => {
+            const maxSize = team.hackathonId?.teamsize || 4;
+            const currentSize = team.members.length;
+            const hackStatus = team.hackathonId?.status || "active";
+            return currentSize < maxSize && hackStatus !== "terminated";
+        });
+
+        res.status(200).json({ success: true, data: openTeams });
+    } catch (error) {
+        console.error("Error fetching open teams:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch teams." });
+    }
+};
+
+// @desc    Request to join a team
+// @route   POST /api/teams/:id/request
+// @access  Private
+export const requestToJoin = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id;
+
+        if (req.user.teamId) {
+            return res.status(400).json({ success: false, message: "You are already in a team." });
+        }
+
+        const team = await Team.findById(id).populate("hackathonId");
+        if (!team) return res.status(404).json({ success: false, message: "Team not found." });
+
+        if (team.islocked) return res.status(400).json({ success: false, message: "Team is locked." });
+
+        if (team.members.includes(userId)) {
+            return res.status(400).json({ success: false, message: "You are already a member." });
+        }
+
+        if (team.joinRequests && team.joinRequests.includes(userId)) {
+            return res.status(400).json({ success: false, message: "You have already requested to join this team." });
+        }
+
+        const maxLimit = team.hackathonId?.teamsize || 4;
+        if (team.members.length >= maxLimit) {
+            return res.status(400).json({ success: false, message: "Team is already full." });
+        }
+
+        team.joinRequests = team.joinRequests || [];
+        team.joinRequests.push(userId);
+        await team.save();
+
+        res.status(200).json({ success: true, message: "Request sent successfully." });
+    } catch (error) {
+        console.error("Error requesting to join:", error);
+        res.status(500).json({ success: false, message: "Failed to send request." });
+    }
+};
+
+// @desc    Accept a join request
+// @route   POST /api/teams/:id/accept-request/:userId
+// @access  Private (Leader only)
+export const acceptJoinRequest = async (req, res) => {
+    try {
+        const { id, userId } = req.params;
+        const leaderId = req.user._id;
+
+        const team = await Team.findById(id).populate("hackathonId");
+        if (!team) return res.status(404).json({ success: false, message: "Team not found." });
+
+        if (team.teamLeader.toString() !== leaderId.toString()) {
+            return res.status(403).json({ success: false, message: "Only the team leader can accept requests." });
+        }
+
+        const targetUser = await User.findById(userId);
+        if (!targetUser) return res.status(404).json({ success: false, message: "User not found." });
+
+        if (targetUser.teamId) {
+             // Remove request if they already joined another team
+             team.joinRequests = team.joinRequests.filter(reqId => reqId.toString() !== userId.toString());
+             await team.save();
+             return res.status(400).json({ success: false, message: "User has already joined another team." });
+        }
+
+        const maxLimit = team.hackathonId?.teamsize || 4;
+        if (team.members.length >= maxLimit) {
+            return res.status(400).json({ success: false, message: "Team is already full." });
+        }
+
+        // Add to members, remove from requests
+        team.members.push(userId);
+        team.joinRequests = team.joinRequests.filter(reqId => reqId.toString() !== userId.toString());
+        await team.save();
+
+        targetUser.teamId = team._id;
+        // Also remove any invitations the user has for this team since they just joined
+        targetUser.invitations = targetUser.invitations.filter(inv => inv.toString() !== team._id.toString());
+        await targetUser.save();
+
+        res.status(200).json({ success: true, message: "Request accepted." });
+    } catch (error) {
+        console.error("Error accepting request:", error);
+        res.status(500).json({ success: false, message: "Failed to accept request." });
+    }
+};
+
+// @desc    Reject a join request
+// @route   POST /api/teams/:id/reject-request/:userId
+// @access  Private (Leader only)
+export const rejectJoinRequest = async (req, res) => {
+    try {
+        const { id, userId } = req.params;
+        const leaderId = req.user._id;
+
+        const team = await Team.findById(id);
+        if (!team) return res.status(404).json({ success: false, message: "Team not found." });
+
+        if (team.teamLeader.toString() !== leaderId.toString()) {
+            return res.status(403).json({ success: false, message: "Only the team leader can reject requests." });
+        }
+
+        team.joinRequests = team.joinRequests.filter(reqId => reqId.toString() !== userId.toString());
+        await team.save();
+
+        res.status(200).json({ success: true, message: "Request rejected." });
+    } catch (error) {
+        console.error("Error rejecting request:", error);
+        res.status(500).json({ success: false, message: "Failed to reject request." });
     }
 };

@@ -59,14 +59,19 @@ export const get = (endpoint) => api(endpoint, { method: "GET" });
 export const post = (endpoint, body) =>
   api(endpoint, {
     method: "POST",
-    body: JSON.stringify(body),
+    body: body instanceof FormData ? body : JSON.stringify(body),
   });
 
 export const put = (endpoint, body) =>
   api(endpoint, {
     method: "PUT",
     body: body instanceof FormData ? body : JSON.stringify(body),
-    ...(body instanceof FormData ? { headers: {} } : {}),
+  });
+
+export const patch = (endpoint, body) =>
+  api(endpoint, {
+    method: "PATCH",
+    body: body instanceof FormData ? body : JSON.stringify(body),
   });
 
 export const del = (endpoint) => api(endpoint, { method: "DELETE" });

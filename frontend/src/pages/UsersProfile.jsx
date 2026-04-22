@@ -130,24 +130,80 @@ const UsersProfile = () => {
           </button>
         </div>
 
-        {/* BIO CARD */}
+        {/* TEAM ACTION CARD */}
         <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 lg:col-span-2">
-          <h2 className="text-lg font-semibold mb-2">About</h2>
-          <p className="text-gray-400">{profile.bio || "No bio provided."}</p>
-
-          <div className="flex gap-2 mt-4 flex-wrap">
-            {(profile.skills || []).map((skill, i) => (
-              <span
-                key={i}
-                className={`px-3 py-1 rounded text-sm ${
-                  mySkills.includes(skill)
-                    ? "bg-blue-900/40 text-blue-400"
-                    : "bg-gray-800 text-gray-300"
-                }`}
+          <h2 className="text-lg font-semibold mb-2">Team Collaboration</h2>
+          
+          {currentUser?.isTeamLeader && !profile.teamId ? (
+            <div className="bg-blue-900/20 border border-blue-500/30 p-4 rounded-lg flex items-center justify-between">
+              <div>
+                <h3 className="text-blue-400 font-medium text-sm">Recruit Developer</h3>
+                <p className="text-gray-400 text-xs mt-1">This user is available. Invite them to your team!</p>
+              </div>
+              <button
+                onClick={async () => {
+                  try {
+                    const { post } = await import("../utils/api");
+                    await post("/teams/invite", { targetUserId: profile._id });
+                    alert("Invitation sent successfully!");
+                  } catch (err) {
+                    alert(err.message || "Failed to send invite");
+                  }
+                }}
+                className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm transition"
               >
-                #{skill}
-              </span>
-            ))}
+                Send Invite
+              </button>
+            </div>
+          ) : !currentUser?.teamId && profile.isTeamLeader && profile.teamId ? (
+             <div className="bg-green-900/20 border border-green-500/30 p-4 rounded-lg flex items-center justify-between">
+              <div>
+                <h3 className="text-green-400 font-medium text-sm">Join Team</h3>
+                <p className="text-gray-400 text-xs mt-1">This user leads a team. Send a request to join!</p>
+              </div>
+              <button
+                onClick={async () => {
+                  try {
+                    const { post } = await import("../utils/api");
+                    await post(`/teams/${profile.teamId}/request`);
+                    alert("Join request sent successfully!");
+                  } catch (err) {
+                    alert(err.message || "Failed to send request");
+                  }
+                }}
+                className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded text-sm transition"
+              >
+                Request to Join
+              </button>
+            </div>
+          ) : currentUser?.teamId === profile.teamId && profile.teamId ? (
+             <div className="bg-slate-800 border border-slate-700 p-4 rounded-lg flex items-center">
+               <span className="text-gray-300 text-sm">You and {(profile.username || "").split(" ")[0]} are in the same team.</span>
+             </div>
+          ) : (
+            <div className="bg-slate-800 border border-slate-700 p-4 rounded-lg flex items-center">
+              <span className="text-gray-400 text-sm">No team actions available at this time.</span>
+            </div>
+          )}
+
+          <div className="mt-6">
+            <h2 className="text-lg font-semibold mb-2">About</h2>
+            <p className="text-gray-400">{profile.bio || "No bio provided."}</p>
+
+            <div className="flex gap-2 mt-4 flex-wrap">
+              {(profile.skills || []).map((skill, i) => (
+                <span
+                  key={i}
+                  className={`px-3 py-1 rounded text-sm ${
+                    mySkills.includes(skill)
+                      ? "bg-blue-900/40 text-blue-400"
+                      : "bg-gray-800 text-gray-300"
+                  }`}
+                >
+                  #{skill}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 

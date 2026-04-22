@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Settings, Search, LogOut } from "lucide-react";
+import { Search, LogOut } from "lucide-react";
 import { UserIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -58,11 +58,6 @@ const Navbar = () => {
           title="Sign Out"
         >
           <LogOut className="w-5 h-5" />
-        </button>
-
-        {/* Settings */}
-        <button className="p-2 rounded hover:bg-slate-800 transition">
-          <Settings className="w-5 h-5 text-gray-300 hover:text-white" />
         </button>
 
         {/* Profile */}

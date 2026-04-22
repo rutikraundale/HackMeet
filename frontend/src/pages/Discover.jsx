@@ -63,7 +63,7 @@ const Discover = () => {
     role: dev.college || "Developer",
     location: dev.college || "",
     skills: dev.skills || [],
-    status: dev.teamId ? "busy" : "open",
+    status: dev.status || (dev.teamId ? "busy" : "open"),
     initials: (dev.username || "??").slice(0, 2).toUpperCase(),
     color: `hsl(${(dev.username || "").length * 40}, 40%, 25%)`,
     profilePicture: dev.profilePicture,

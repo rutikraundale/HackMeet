@@ -17,8 +17,10 @@ const Profile = () => {
     skills: "",
     links: "",
     college: "",
+    status: "open",
     profilePic: null, // File object
     profilePicPreview: "",
+    removeProfilePicture: false,
   });
 
   // ── Edit handlers ─────────────────────────────────────────────────────────
@@ -28,8 +30,10 @@ const Profile = () => {
       skills: (user?.skills || []).join(", "),
       links: (user?.socialLinks || []).join(", "),
       college: user?.college || "",
+      status: user?.status || "open",
       profilePic: null,
       profilePicPreview: user?.profilePicture || "",
+      removeProfilePicture: false,
     });
     setIsEditing(true);
   };
@@ -40,13 +44,16 @@ const Profile = () => {
       const formData = new FormData();
       formData.append("bio", editData.bio);
       formData.append("college", editData.college);
+      formData.append("status", editData.status);
       formData.append("skills", JSON.stringify(
         editData.skills.split(",").map((s) => s.trim()).filter(Boolean)
       ));
       formData.append("socialLinks", JSON.stringify(
         editData.links.split(",").map((l) => l.trim()).filter(Boolean)
       ));
-      if (editData.profilePic) {
+      if (editData.removeProfilePicture) {
+        formData.append("removeProfilePicture", "true");
+      } else if (editData.profilePic) {
         formData.append("profilePicture", editData.profilePic);
       }
 
@@ -68,11 +75,24 @@ const Profile = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setEditData((prev) => ({ ...prev, profilePic: file }));
+    setEditData((prev) => ({ 
+      ...prev, 
+      profilePic: file,
+      removeProfilePicture: false 
+    }));
     const reader = new FileReader();
     reader.onload = (ev) =>
       setEditData((prev) => ({ ...prev, profilePicPreview: ev.target.result }));
     reader.readAsDataURL(file);
+  };
+
+  const handleRemovePicture = () => {
+    setEditData((prev) => ({
+      ...prev,
+      profilePic: null,
+      profilePicPreview: "",
+      removeProfilePicture: true,
+    }));
   };
 
   // ── Invite handlers ───────────────────────────────────────────────────────
@@ -98,6 +118,7 @@ const Profile = () => {
     links: user?.socialLinks || [],
     profilePic: user?.profilePicture || "",
     college: user?.college || "",
+    status: user?.status || "open",
   };
 
   return (
@@ -134,6 +155,7 @@ const Profile = () => {
           onCancel={handleCancel}
           onInputChange={handleInputChange}
           onFileChange={handleFileChange}
+          onRemovePicture={handleRemovePicture}
           saving={saving}
         />
       )}

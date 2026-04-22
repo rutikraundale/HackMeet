@@ -1,5 +1,5 @@
 import React from "react";
-import { Edit, Save, X, Mail, GraduationCap, FileText, Link as LinkIcon, Code } from "lucide-react";
+import { Edit, Save, X, Mail, GraduationCap, FileText, Link as LinkIcon, Code, Camera, Trash2 } from "lucide-react";
 
 const ProfileTab = ({
   user,
@@ -10,6 +10,7 @@ const ProfileTab = ({
   onCancel,
   onInputChange,
   onFileChange,
+  onRemovePicture,
 }) => {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
@@ -18,20 +19,42 @@ const ProfileTab = ({
           {/* Avatar Section */}
           <div className="flex flex-col items-center shrink-0 w-full md:w-auto">
             {isEditing ? (
-              <div className="mb-4 flex flex-col items-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={onFileChange}
-                  className="text-sm text-gray-400 max-w-[200px]"
-                />
-                {editData.profilePic && (
-                  <img
-                    src={editData.profilePic}
-                    alt="profile preview"
-                    className="w-32 h-32 rounded-2xl mt-4 object-cover shadow-lg border-2 border-slate-600"
-                  />
-                )}
+              <div className="mb-6 flex flex-col items-center relative group">
+                <div className="relative w-32 h-32 rounded-2xl overflow-hidden border-2 border-slate-600 shadow-lg bg-slate-900 flex items-center justify-center">
+                  {editData.profilePic ? (
+                    <img
+                      src={editData.profilePic}
+                      alt="profile preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <img
+                      src={user.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&size=128`}
+                      alt="current profile"
+                      className="w-full h-full object-cover opacity-50"
+                    />
+                  )}
+                  
+                  {/* Hover Overlay for Upload */}
+                  <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                    <Camera size={24} className="text-white mb-1" />
+                    <span className="text-xs text-white font-medium">Change</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={onFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                <button
+                  onClick={onRemovePicture}
+                  className="mt-3 flex items-center gap-1.5 text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-400/10 px-3 py-1.5 rounded-lg transition"
+                >
+                  <Trash2 size={14} />
+                  Remove Picture
+                </button>
               </div>
             ) : (
               <img
@@ -75,12 +98,32 @@ const ProfileTab = ({
           {/* Details Section */}
           <div className="flex-1 w-full space-y-6">
             <div>
-              <h2 className="text-3xl font-bold text-white mb-2">{user.name}</h2>
-              <div className="flex flex-col gap-2 mt-3">
-                <div className="flex items-center gap-3 text-gray-400">
-                  <Mail size={16} className="text-gray-500" />
-                  <span className="text-sm">{user.email}</span>
-                </div>
+            <h2 className="text-3xl font-bold text-white mb-2">{user.name}</h2>
+            <div className="flex flex-col gap-2 mt-3">
+              <div className="flex items-center gap-3 text-gray-400">
+                <span className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
+                  user.status === 'open'
+                    ? 'bg-green-900/30 text-green-300'
+                    : 'bg-yellow-900/30 text-yellow-300'
+                }`}>
+                  {user.status === 'open' ? '✓ Available for Teams' : '⏳ Currently Busy'}
+                </span>
+                {isEditing && (
+                  <select
+                    value={editData.status}
+                    onChange={(e) => onInputChange("status", e.target.value)}
+                    className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="open">Available</option>
+                    <option value="busy">Busy</option>
+                  </select>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3 text-gray-400">
+                <Mail size={16} className="text-gray-500" />
+                <span className="text-sm">{user.email}</span>
+              </div>
                 
                 <div className="flex items-center gap-3 text-gray-400">
                   <GraduationCap size={16} className="text-gray-500" />

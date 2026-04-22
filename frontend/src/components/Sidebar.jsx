@@ -17,15 +17,19 @@ const Sidebar = () => {
   const normalClass =
     "flex items-center gap-4 px-4 py-3 rounded-lg text-gray-300 hover:bg-slate-800 hover:text-white transition";
 
-  const navItems = [
-    { to: "/dashboard", icon: <AiOutlineProject size={22} />, label: "Dashboard" },
-    { to: "/discover", icon: <RiCompassDiscoverLine size={22} />, label: "Discover" },
-    { to: "/team-builder", icon: <HiOutlineUserGroup size={22} />, label: "Team Builder" },
-    { to: "/projects", icon: <FaRegClipboard size={20} />, label: "Projects" },
-    { to: "/messages", icon: <MdMessage size={22} />, label: "Message" },
-    { to: "/profile", icon: <MdPerson size={22} />, label: "Profile" },
-    ...(user?.isAdmin ? [{ to: "/admin", icon: <Shield size={20} />, label: "Admin" }] : []),
-  ];
+  const navItems = user?.isAdmin
+    ? [
+        { to: "/admin", icon: <Shield size={20} />, label: "Admin Panel" },
+      ]
+    : [
+        { to: "/dashboard", icon: <AiOutlineProject size={22} />, label: "Dashboard" },
+        { to: "/discover", icon: <RiCompassDiscoverLine size={22} />, label: "Discover" },
+        { to: "/find-teams", icon: <HiOutlineUserGroup size={22} />, label: "Find Teams" },
+        { to: "/team-builder", icon: <HiOutlineUserGroup size={22} />, label: "Team Builder" },
+        { to: "/projects", icon: <FaRegClipboard size={20} />, label: "Projects" },
+        { to: "/messages", icon: <MdMessage size={22} />, label: "Message" },
+        { to: "/profile", icon: <MdPerson size={22} />, label: "Profile" },
+      ];
 
   return (
     <div className="bg-slate-900/90 backdrop-blur-md h-[calc(100vh-60px)] w-64 p-5 flex flex-col gap-8 fixed top-[60px] left-0 z-40 border-r border-slate-800">

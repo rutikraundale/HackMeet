@@ -29,10 +29,11 @@ const hackathonSchema = new mongoose.Schema({
         type: [String],
         required: false
     },
-    
-    
-    
-    
+    status: {
+        type: String,
+        enum: ["active", "terminated"],
+        default: "active"
+    }
 }, { timestamps: true });
 
 const Hackathon = mongoose.model("Hackathon", hackathonSchema);

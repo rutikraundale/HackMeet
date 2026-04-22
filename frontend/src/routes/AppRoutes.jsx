@@ -8,6 +8,7 @@ import UsersProfile from "../pages/UsersProfile";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Message from "../pages/Message";
 import Discover from "../pages/Discover";
+import FindTeams from "../pages/FindTeams";
 import TeamBuilder from "../pages/TeamBuilder";
 import HackathonDetail from "../pages/HackathonDetail";
 import Projects from "../pages/Projects";
@@ -16,9 +17,12 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import { useAuth } from "../context/AuthContext";
 
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, user, loading } = useAuth();
   if (loading) return null;
-  return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
+  if (isAuthenticated) {
+    return <Navigate to={user?.isAdmin ? "/admin" : "/dashboard"} replace />;
+  }
+  return children;
 };
 
 const Protected = ({ children, adminOnly }) => (
@@ -43,6 +47,7 @@ const AppRoutes = () => {
       <Route path="/messages/:id" element={<Protected><Message /></Protected>} />
       <Route path="/projects" element={<Protected><Projects /></Protected>} />
       <Route path="/discover" element={<Protected><Discover /></Protected>} />
+      <Route path="/find-teams" element={<Protected><FindTeams /></Protected>} />
       <Route path="/team-builder" element={<Protected><TeamBuilder /></Protected>} />
       <Route path="/hackathon/:id" element={<Protected><HackathonDetail /></Protected>} />
       <Route path="/admin" element={<Protected adminOnly><AdminDashboard /></Protected>} />
