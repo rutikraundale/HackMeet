@@ -3,6 +3,7 @@ import { Search, LogOut } from "lucide-react";
 import { UserIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import NotificationBell from "./NotificationBell";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -51,6 +52,7 @@ const Navbar = () => {
 
       {/* Right Section */}
       <div className="flex items-center gap-4 relative">
+        <NotificationBell />
         {/* Logout */}
         <button
           onClick={handleLogout}

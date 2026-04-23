@@ -46,12 +46,12 @@ const Dashboard = () => {
   const displayHackathons = [...liveHackathons, ...upcomingHackathons];
 
   return (
-    <div className="p-6 bg-gray-950 min-h-screen text-white">
+    <div className="p-4 md:p-6 bg-gray-950 min-h-screen text-white">
 
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Active Hackathons</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Active Hackathons</h1>
           <p className="text-gray-400 mt-1">
             Join elite global builds and connect with engineers.
           </p>
@@ -71,7 +71,7 @@ const Dashboard = () => {
 
       {/* Hackathon Cards */}
       {loading ? (
-        <div className="grid sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {[...Array(3)].map((_, i) => (
             <LoadingSkeleton key={i} variant="card" />
           ))}
@@ -83,7 +83,7 @@ const Dashboard = () => {
           <p className="text-gray-400">Check back soon for upcoming hackathons!</p>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {displayHackathons.map((hack) => {
             const isLive = new Date(hack.startDate) <= now && new Date(hack.endDate) >= now;
             const isParticipating = !!user?.teamId;
@@ -128,10 +128,21 @@ const Dashboard = () => {
                   </button>
                   <button
                     onClick={() => handleAction("VIEW_DETAILS", hack)}
-                    className="bg-gray-800 px-3 py-2 rounded-lg hover:bg-gray-700 text-sm"
+                    className="bg-gray-800 px-3 py-2 rounded-lg hover:bg-gray-700 text-sm flex-1"
                   >
                     Details
                   </button>
+                  {hack.registeringUrl && (
+                    <a
+                      href={hack.registeringUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-green-600/20 text-green-400 border border-green-500/30 px-3 py-2 rounded-lg hover:bg-green-600/30 text-sm flex items-center justify-center transition"
+                      title="External Registration"
+                    >
+                      🔗
+                    </a>
+                  )}
                 </div>
               </div>
             );

@@ -73,10 +73,10 @@ const Discover = () => {
   });
 
   return (
-    <div className="p-6 bg-gray-950 min-h-screen text-white">
+    <div className="p-4 md:p-6 bg-gray-950 min-h-screen text-white">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Discover Developers</h1>
+        <h1 className="text-2xl md:text-3xl font-bold">Discover Developers</h1>
         <p className="text-gray-400 mt-2">Find and connect with talented developers</p>
       </div>
 
@@ -118,7 +118,7 @@ const Discover = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
         {[
           { label: "Total Developers", value: developers.length },
           { label: "Open to Team Up", value: developers.filter((d) => !d.teamId).length },
@@ -133,7 +133,7 @@ const Discover = () => {
 
       {/* Results */}
       {isLoading ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
             <LoadingSkeleton key={i} variant="card" />
           ))}
@@ -156,7 +156,7 @@ const Discover = () => {
           </button>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map((dev) => {
             const mapped = mapUser(dev);
             return (

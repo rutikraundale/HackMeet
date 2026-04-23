@@ -74,10 +74,13 @@ const Message = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-60px)] text-white">
-
+    <div className="flex h-[calc(100vh-64px)] text-white relative">
       {/* Conversations Sidebar */}
-      <div className="w-1/3 bg-gray-900 p-6 relative overflow-y-auto">
+      <div
+        className={`w-full md:w-1/3 bg-gray-900 p-4 md:p-6 relative overflow-y-auto ${
+          selectedUser ? "hidden md:block" : "block"
+        }`}
+      >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold">Messages</h2>
           <button
@@ -180,7 +183,20 @@ const Message = () => {
       </div>
 
       {/* Chat Area */}
-      <div className="w-2/3 bg-gray-800 p-4">
+      <div
+        className={`w-full md:w-2/3 bg-gray-800 flex flex-col ${
+          !selectedUser ? "hidden md:flex" : "flex"
+        }`}
+      >
+        {selectedUser && (
+          <div className="md:hidden p-3 border-b border-gray-700 flex items-center gap-3">
+            <button onClick={() => setSelectedUser(null)} className="text-blue-400">
+              ← Back
+            </button>
+            <span className="font-bold">{selectedUser.username}</span>
+          </div>
+        )}
+
         {selectedUser ? (
           <ChatWindow
             user={selectedUser}
@@ -188,13 +204,11 @@ const Message = () => {
             onMessageSent={refreshConversations}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center">
+          <div className="hidden md:flex flex-col items-center justify-center h-full text-center p-4">
             <div className="bg-gray-700/50 rounded-full p-6 mb-6">
               <MessageCircle size={48} className="text-gray-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-300 mb-2">
-              Select a Conversation
-            </h3>
+            <h3 className="text-xl font-semibold text-gray-300 mb-2">Select a Conversation</h3>
             <p className="text-gray-500 text-sm">Choose a conversation or start a new chat</p>
           </div>
         )}

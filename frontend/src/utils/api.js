@@ -18,11 +18,6 @@ const api = async (endpoint, options = {}) => {
     ...options,
   };
 
-  console.log(`API Request: ${config.method} ${url}`, {
-    body: config.body,
-    headers: config.headers,
-  });
-
   let res = await fetch(url, config);
 
   // If access token expired and it wasn't a login/refresh request, try refreshing once

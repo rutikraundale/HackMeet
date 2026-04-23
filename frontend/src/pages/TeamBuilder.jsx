@@ -129,18 +129,18 @@ const TeamBuilder = () => {
   });
 
   return (
-    <div className="p-6 bg-gray-950 min-h-screen text-white">
+    <div className="p-4 md:p-6 bg-gray-950 min-h-screen text-white">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Team Builder</h1>
-        <p className="text-gray-400">Create teams and invite talented developers</p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">Team Builder</h1>
+        <p className="text-gray-400 text-sm">Create teams and invite talented developers</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-6 border-b border-slate-700 mb-8">
+      <div className="flex gap-4 md:gap-6 border-b border-slate-700 mb-8 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('create')}
-          className={`pb-3 font-medium transition ${
+          className={`pb-3 font-medium transition text-sm whitespace-nowrap ${
             activeTab === 'create'
               ? 'border-b-2 border-blue-500 text-blue-400'
               : 'text-gray-400 hover:text-gray-300'
@@ -151,7 +151,7 @@ const TeamBuilder = () => {
         {user?.isTeamLeader && (
           <button
             onClick={() => setActiveTab('invites')}
-            className={`pb-3 font-medium transition ${
+            className={`pb-3 font-medium transition text-sm whitespace-nowrap ${
               activeTab === 'invites'
                 ? 'border-b-2 border-blue-500 text-blue-400'
                 : 'text-gray-400 hover:text-gray-300'
@@ -162,7 +162,7 @@ const TeamBuilder = () => {
         )}
         <button 
           onClick={fetchData}
-          className="ml-auto text-xs text-blue-400 hover:underline mb-3"
+          className="ml-auto text-xs text-blue-400 hover:underline mb-3 whitespace-nowrap"
         >
           🔄 Refresh Data
         </button>
@@ -170,9 +170,9 @@ const TeamBuilder = () => {
 
       {/* CREATE TEAM TAB */}
       {activeTab === 'create' && (
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Form */}
-          <div className="md:col-span-1">
+          <div className="lg:col-span-1">
             <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 sticky top-24">
               <h3 className="text-lg font-semibold mb-4">New Team</h3>
 
@@ -243,7 +243,7 @@ const TeamBuilder = () => {
           </div>
 
           {/* User List with Skill Filter */}
-          <div className="md:col-span-2">
+          <div className="lg:col-span-2">
             {ALL_SKILLS.length > 0 && (
               <div className="mb-6">
                 <p className="text-sm text-gray-400 mb-3">Filter by Skill</p>
@@ -276,7 +276,7 @@ const TeamBuilder = () => {
             )}
 
             {loading ? (
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[...Array(4)].map((_, i) => (
                   <LoadingSkeleton key={i} variant="card" />
                 ))}
@@ -289,7 +289,7 @@ const TeamBuilder = () => {
                     <p className="text-sm opacity-80">Create your team on the left to start inviting talented developers!</p>
                   </div>
                 )}
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {(() => {
                     const isTeamFull = myTeam && (myTeam.members.length + invitesSent.length) >= (myTeam.hackathonId?.teamsize || 4);
                     
@@ -315,7 +315,7 @@ const TeamBuilder = () => {
       {activeTab === 'invites' && (
         <div>
           {invitesSent.length > 0 ? (
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {developers.filter(dev => invitesSent.includes(dev._id)).map(dev => {
                 const initials = (dev.username || "??").slice(0, 2).toUpperCase();
                 const color = `hsl(${(dev.username || "").length * 40}, 40%, 25%)`;

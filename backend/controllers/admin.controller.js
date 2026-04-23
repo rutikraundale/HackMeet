@@ -1,12 +1,14 @@
-import Hackathon from "../models/hackathons.model.js";
 import Team from "../models/team.model.js";
+import User from "../models/user.model.js";
+import Hackathon from "../models/hackathons.model.js";
+import { createNotification } from "./notification.controller.js";
 
 // @desc    Create a new hackathon
 // @route   POST /api/admin/hackathons
 // @access  Private/Admin
 export const createHackathon = async (req, res) => {
     try {
-        const { name, description, startDate, endDate, location, teamsize, prizes } = req.body;
+        const { name, description, startDate, endDate, location, teamsize, prizes, registeringUrl } = req.body;
 
         if (!name || !description || !startDate || !endDate || !location || !teamsize) {
             return res.status(400).json({ success: false, message: "Please provide all required fields." });
@@ -20,6 +22,7 @@ export const createHackathon = async (req, res) => {
             location,
             teamsize,
             prizes,
+            registeringUrl,
         });
 
         const createdHackathon = await hackathon.save();
@@ -28,6 +31,18 @@ export const createHackathon = async (req, res) => {
             success: true,
             data: createdHackathon,
             message: "Hackathon created successfully.",
+        });
+
+        // Notify all users about the new hackathon
+        const users = await User.find({ isAdmin: { $ne: true } }).select("_id");
+        users.forEach(user => {
+            createNotification(
+                user._id,
+                req.user._id,
+                "hackathon",
+                name,
+                `/hackathon/${createdHackathon._id}`
+            );
         });
     } catch (error) {
         console.error("Error creating hackathon:", error);

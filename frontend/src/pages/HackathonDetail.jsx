@@ -26,7 +26,7 @@ const HackathonDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 bg-gray-950 min-h-screen text-white">
+      <div className="p-4 md:p-6 bg-gray-950 min-h-screen text-white">
         <div className="mb-6">
           <div className="w-32 h-8 bg-slate-700 animate-pulse rounded mb-4"></div>
         </div>
@@ -40,7 +40,7 @@ const HackathonDetail = () => {
 
   if (!hackathon) {
     return (
-      <div className="p-6 bg-gray-950 min-h-screen text-white">
+      <div className="p-4 md:p-6 bg-gray-950 min-h-screen text-white">
         <button
           onClick={() => navigate('/dashboard')}
           className="flex items-center gap-2 text-blue-400 hover:text-blue-300 mb-6"
@@ -61,10 +61,10 @@ const HackathonDetail = () => {
   const isUpcoming = new Date(hackathon.startDate) > now;
   const startDate = new Date(hackathon.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   const endDate = new Date(hackathon.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  const durationDays = Math.ceil((new Date(hackathon.endDate) - new Date(hackathon.startDate)) / (1000 * 60 * 60 * 24));
+  const durationDays = Math.max(1, Math.ceil((new Date(hackathon.endDate) - new Date(hackathon.startDate)) / (1000 * 60 * 60 * 24)));
 
   return (
-    <div className="p-6 bg-gray-950 min-h-screen text-white">
+    <div className="p-4 md:p-6 bg-gray-950 min-h-screen text-white">
       {/* Back Button */}
       <button
         onClick={() => navigate('/dashboard')}
@@ -77,22 +77,34 @@ const HackathonDetail = () => {
       <div className="max-w-6xl">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-start justify-between mb-4">
+          <div className="flex flex-col md:flex-row items-start justify-between mb-4 gap-6">
             <div className="flex-1">
               <span className={`text-xs font-semibold uppercase tracking-wider mb-2 block ${
                 isLive ? "text-red-400" : isUpcoming ? "text-green-400" : "text-gray-400"
               }`}>
                 {isLive ? "🔴 LIVE NOW" : isUpcoming ? "🟢 UPCOMING" : "PAST"}
               </span>
-              <h1 className="text-4xl font-bold mb-3">{hackathon.name}</h1>
-              <p className="text-gray-400 max-w-2xl">{hackathon.description}</p>
+              <h1 className="text-3xl md:text-4xl font-bold mb-3">{hackathon.name}</h1>
+              <p className="text-gray-400 max-w-2xl text-sm md:text-base">{hackathon.description}</p>
             </div>
-            <button
-              onClick={() => navigate('/team-builder', { state: { hackathonId: hackathon._id, hackathonName: hackathon.name } })}
-              className="px-6 py-3 rounded-lg font-medium transition whitespace-nowrap ml-4 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Create Team
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              {hackathon.registeringUrl && (
+                <a
+                  href={hackathon.registeringUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-3 rounded-lg font-medium transition text-center bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Register Externally
+                </a>
+              )}
+              <button
+                onClick={() => navigate('/team-builder', { state: { hackathonId: hackathon._id, hackathonName: hackathon.name } })}
+                className="px-6 py-3 rounded-lg font-medium transition whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Create Team
+              </button>
+            </div>
           </div>
         </div>
 

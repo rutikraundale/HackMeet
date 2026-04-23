@@ -1,5 +1,6 @@
 import Team from "../models/team.model.js";
 import User from "../models/user.model.js";
+import { createNotification } from "./notification.controller.js";
 
 // @desc    Create a new team
 // @route   POST /api/teams
@@ -170,6 +171,15 @@ export const inviteUser = async (req, res) => {
             success: true,
             message: "Invitation sent successfully."
         });
+
+        // Notify user about the invitation
+        createNotification(
+            targetUserId,
+            leaderUser._id,
+            "invitation",
+            `${leaderUser.username} invited you to join team ${team.teamName}`,
+            `/profile?tab=invite`
+        );
 
     } catch (error) {
         console.error("Error sending invite:", error);
@@ -579,6 +589,15 @@ export const requestToJoin = async (req, res) => {
         await team.save();
 
         res.status(200).json({ success: true, message: "Request sent successfully." });
+
+        // Notify team leader about the join request
+        createNotification(
+            team.teamLeader,
+            userId,
+            "request",
+            `${req.user.username} requested to join your team ${team.teamName}`,
+            `/profile?tab=team`
+        );
     } catch (error) {
         console.error("Error requesting to join:", error);
         res.status(500).json({ success: false, message: "Failed to send request." });
@@ -626,6 +645,15 @@ export const acceptJoinRequest = async (req, res) => {
         await targetUser.save();
 
         res.status(200).json({ success: true, message: "Request accepted." });
+
+        // Notify user that their request was accepted
+        createNotification(
+            userId,
+            leaderId,
+            "invitation",
+            `Your request to join ${team.teamName} has been accepted!`,
+            `/profile?tab=team`
+        );
     } catch (error) {
         console.error("Error accepting request:", error);
         res.status(500).json({ success: false, message: "Failed to accept request." });

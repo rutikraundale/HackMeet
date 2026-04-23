@@ -29,6 +29,10 @@ const hackathonSchema = new mongoose.Schema({
         type: [String],
         required: false
     },
+    registeringUrl: {
+        type: String,
+        required: false
+    },
     status: {
         type: String,
         enum: ["active", "terminated"],

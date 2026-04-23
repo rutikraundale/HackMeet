@@ -156,45 +156,45 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="p-6 bg-gray-950 min-h-screen text-white">
+    <div className="p-4 md:p-6 bg-gray-950 min-h-screen text-white">
 
       {/* Page Header */}
-      <div className="mb-8 flex items-start justify-between">
+      <div className="mb-8 flex flex-col md:flex-row items-start justify-between gap-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-3xl font-bold">Admin Panel</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">Admin Panel</h1>
           </div>
           <p className="text-gray-400 text-sm ">
             Manage hackathons and review all registered teams
           </p>
         </div>
 
-        <div className="hidden md:flex items-center gap-3">
-          <div className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-center">
-            <p className="text-2xl font-bold text-blue-400">
+        <div className="flex items-center gap-3">
+          <div className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-center flex-1 md:flex-none">
+            <p className="text-xl md:text-2xl font-bold text-blue-400">
               {segmentedHacks.live.length + segmentedHacks.upcoming.length}
             </p>
-            <p className="text-gray-400 text-xs">Active</p>
+            <p className="text-gray-400 text-[10px] md:text-xs uppercase">Active</p>
           </div>
-          <div className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-center">
-            <p className="text-2xl font-bold text-purple-400">{teams.length}</p>
-            <p className="text-gray-400 text-xs">Teams</p>
+          <div className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-center flex-1 md:flex-none">
+            <p className="text-xl md:text-2xl font-bold text-purple-400">{teams.length}</p>
+            <p className="text-gray-400 text-[10px] md:text-xs uppercase">Teams</p>
           </div>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-8 border-b border-slate-700 mb-8">
-        <button id="admin-tab-create" onClick={() => setActiveTab("create")} className={tabClass("create")}>
+      <div className="flex gap-4 md:gap-8 border-b border-slate-700 mb-8 overflow-x-auto no-scrollbar">
+        <button id="admin-tab-create" onClick={() => setActiveTab("create")} className={`${tabClass("create")} whitespace-nowrap`}>
            Create Hackathon
         </button>
-        <button id="admin-tab-hackathons" onClick={() => setActiveTab("hackathons")} className={tabClass("hackathons")}>
-           Active Hackathons ({segmentedHacks.live.length + segmentedHacks.upcoming.length})
+        <button id="admin-tab-hackathons" onClick={() => setActiveTab("hackathons")} className={`${tabClass("hackathons")} whitespace-nowrap`}>
+           Active ({segmentedHacks.live.length + segmentedHacks.upcoming.length})
         </button>
-        <button id="admin-tab-past" onClick={() => setActiveTab("past")} className={tabClass("past")}>
-           Previous Hackathons ({segmentedHacks.past.length})
+        <button id="admin-tab-past" onClick={() => setActiveTab("past")} className={`${tabClass("past")} whitespace-nowrap`}>
+           Past ({segmentedHacks.past.length})
         </button>
-        <button id="admin-tab-teams" onClick={() => setActiveTab("teams")} className={tabClass("teams")}>
+        <button id="admin-tab-teams" onClick={() => setActiveTab("teams")} className={`${tabClass("teams")} whitespace-nowrap`}>
            All Teams ({teams.length})
         </button>
       </div>
@@ -232,7 +232,7 @@ const AdminDashboard = () => {
           {segmentedHacks.live.length > 0 && (
             <div>
               <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Live Now</h4>
-              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                 {segmentedHacks.live.map(h => <HackathonCard h={h} key={h._id} />)}
               </div>
             </div>
@@ -242,7 +242,7 @@ const AdminDashboard = () => {
           {segmentedHacks.upcoming.length > 0 && (
             <div>
               <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Upcoming</h4>
-              <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                 {segmentedHacks.upcoming.map(h => <HackathonCard h={h} key={h._id} />)}
               </div>
             </div>
@@ -278,7 +278,7 @@ const AdminDashboard = () => {
               <p className="text-gray-400">Finished or terminated hackathons will appear here.</p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {segmentedHacks.past.map(h => <HackathonCard h={h} key={h._id} isPast={true} />)}
             </div>
           )}

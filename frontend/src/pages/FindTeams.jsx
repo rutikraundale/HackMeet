@@ -53,16 +53,16 @@ const FindTeams = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-950 min-h-screen text-white">
+    <div className="p-4 md:p-6 bg-gray-950 min-h-screen text-white">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Find Teams</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Find Teams</h1>
         <p className="text-gray-400 text-sm">
           Browse active teams looking for new members and request to join them.
         </p>
       </div>
 
       {loading ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
             <LoadingSkeleton key={i} variant="card" />
           ))}
@@ -74,7 +74,7 @@ const FindTeams = () => {
           <p className="text-gray-500">All teams are currently full or locked. Check back later!</p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {teams.map((team) => {
             const hackathon = team.hackathonId || {};
             const maxSize = hackathon.teamsize || 4;

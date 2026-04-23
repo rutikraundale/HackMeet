@@ -13,6 +13,7 @@ import TeamBuilder from "../pages/TeamBuilder";
 import HackathonDetail from "../pages/HackathonDetail";
 import Projects from "../pages/Projects";
 import AdminDashboard from "../pages/AdminDashboard";
+import Notifications from "../pages/Notifications";
 import ProtectedRoute from "../components/ProtectedRoute";
 import { useAuth } from "../context/AuthContext";
 
@@ -51,6 +52,7 @@ const AppRoutes = () => {
       <Route path="/team-builder" element={<Protected><TeamBuilder /></Protected>} />
       <Route path="/hackathon/:id" element={<Protected><HackathonDetail /></Protected>} />
       <Route path="/admin" element={<Protected adminOnly><AdminDashboard /></Protected>} />
+      <Route path="/notifications" element={<Protected><Notifications /></Protected>} />
 
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

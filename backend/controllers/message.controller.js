@@ -1,6 +1,7 @@
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import { getReceiverSocketId, io } from "../socket/socket.js";
+import { createNotification } from "./notification.controller.js";
 
 // @desc    Send a message
 // @route   POST /api/messages/:receiverId
@@ -49,6 +50,15 @@ export const sendMessage = async (req, res) => {
             // Optionally emit a conversational bump update
             io.to(receiverSocketId).emit("updateConversation", conversation._id);
         }
+
+        // Send a notification to the receiver
+        createNotification(
+            receiverId,
+            senderId,
+            "message",
+            `You have a new message from ${req.user.username}`,
+            `/messages`
+        );
 
         res.status(201).json({ success: true, data: newMessage });
     } catch (error) {

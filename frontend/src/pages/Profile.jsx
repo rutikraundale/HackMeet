@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useToast } from "../context/ToastContext";
 import { useAuth } from "../context/AuthContext";
 import ProfileTab from "../components/profile/ProfileTab";
@@ -6,11 +7,23 @@ import TeamTab from "../components/profile/TeamTab";
 import InviteTab from "../components/profile/InviteTab";
 
 const Profile = () => {
-  const [activeTab, setActiveTab] = useState("profile");
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialTab = searchParams.get("tab") || "profile";
+  
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [isEditing, setIsEditing] = useState(false);
   const { addToast } = useToast();
   const { user, updateProfile } = useAuth();
   const [saving, setSaving] = useState(false);
+
+  // Sync tab with URL if it changes
+  React.useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
 
   const [editData, setEditData] = useState({
     bio: "",
@@ -122,15 +135,15 @@ const Profile = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-950 min-h-screen text-white">
+    <div className="p-4 md:p-6 bg-gray-950 min-h-screen text-white">
 
       {/* ── Tabs ── */}
-      <div className="flex gap-8 border-b border-slate-700 mb-6">
+      <div className="flex gap-4 md:gap-8 border-b border-slate-700 mb-6 overflow-x-auto no-scrollbar">
         {tabs.map(({ key, label }) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`pb-3 font-medium transition text-sm ${
+            className={`pb-3 font-medium transition text-sm whitespace-nowrap ${
               activeTab === key
                 ? "border-b-2 border-blue-500 text-blue-400"
                 : "text-gray-400 hover:text-gray-300"

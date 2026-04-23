@@ -28,6 +28,7 @@ const HackathonForm = ({ onCreated, initialData = null, isEditing = false }) => 
     location: initialData?.location || "",
     teamsize: initialData?.teamsize || "",
     prizes: initialData?.prizes ? initialData.prizes.join(", ") : "",
+    registeringUrl: initialData?.registeringUrl || "",
   });
 
   // Tracks which fields have validation errors
@@ -47,7 +48,7 @@ const HackathonForm = ({ onCreated, initialData = null, isEditing = false }) => 
     if (!form.startDate) e.startDate = "Start date is required";
     if (!form.endDate) e.endDate = "End date is required";
     if (form.startDate && form.endDate && form.endDate < form.startDate)
-      e.endDate = "End date must be after start date";
+      e.endDate = "End date must be on or after start date";
     if (!form.location.trim()) e.location = "Location is required";
     if (!form.teamsize || isNaN(form.teamsize) || Number(form.teamsize) < 1)
       e.teamsize = "Valid team size is required";
@@ -95,6 +96,7 @@ const HackathonForm = ({ onCreated, initialData = null, isEditing = false }) => 
             location: "",
             teamsize: "",
             prizes: "",
+            registeringUrl: "",
           });
           setSuccess(true);
           setTimeout(() => setSuccess(false), 3500);
@@ -274,6 +276,24 @@ const HackathonForm = ({ onCreated, initialData = null, isEditing = false }) => 
             className={inputClass("prizes")}
           />
           <p className="text-gray-500 text-xs mt-1">Separate multiple prizes with commas</p>
+        </div>
+
+        {/* Registration URL */}
+        <div>
+          <label className="text-sm text-gray-400 block mb-1">
+            <span className="flex items-center gap-1">
+              <Plus size={12} /> Registration Form URL
+            </span>
+          </label>
+          <input
+            id="admin-hack-registeringUrl"
+            type="text"
+            value={form.registeringUrl}
+            onChange={(e) => handleChange("registeringUrl", e.target.value)}
+            placeholder="https://forms.gle/..."
+            className={inputClass("registeringUrl")}
+          />
+          <p className="text-gray-500 text-xs mt-1">Link to the external registration form</p>
         </div>
 
         {/* Submit Button */}
