@@ -3,6 +3,7 @@ import { Plus, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import ToastContainer from "../components/ToastContainer";
 
 const SignUp = () => {
   const [username, setUsername] = useState("");
@@ -48,11 +49,11 @@ const SignUp = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!username || !email || !password) {
-      addToast("Username, Email, and Password are required", "error");
+      addToast("Please check your details and try again.", "warning");
       return;
     }
     if (password.length < 6) {
-      addToast("Password must be at least 6 characters", "error");
+      addToast("Please check your details and try again.", "warning");
       return;
     }
     setLoading(true);
@@ -75,10 +76,10 @@ const SignUp = () => {
       }
 
       await signup(formData);
-      addToast("Account created successfully! 🎉", "success");
+      addToast("Account created! Welcome to HackMeet.", "success");
       navigate("/login");
     } catch (err) {
-      addToast(err.message || "Signup failed", "error");
+      addToast("Sign up failed. That email may already be in use.", "error");
     } finally {
       setLoading(false);
     }
@@ -86,7 +87,8 @@ const SignUp = () => {
 
   return (
     <div className="min-h-screen w-full bg-slate-900 text-white flex flex-col overflow-x-hidden">
-      
+      {/* ToastContainer must be mounted here — SignUp is a public route outside DashboardLayout */}
+      <ToastContainer />
       {/* Header */}
       <div className="border-b border-slate-700 flex justify-between items-center">
         <div className="flex items-center gap-2 mx-4">
@@ -98,12 +100,13 @@ const SignUp = () => {
       </div>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col items-center px-4 py-6 overflow-y-auto">
+      {/* pb-28 sm:pb-6: keyboard-safe spacing on mobile */}
+      <div className="flex-1 flex flex-col items-center px-4 py-6 pb-28 sm:pb-6 overflow-y-auto">
         
-        <div className="w-full max-w-xl mx-auto bg-gray-900 p-8 rounded-xl border border-gray-800">
+        <div className="w-full max-w-xl mx-auto bg-gray-900 p-6 sm:p-8 rounded-xl border border-gray-800">
 
           {/* Title */}
-          <h1 className="text-3xl font-bold mb-3">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-3">
             Architect Your Identity
           </h1>
           <p className="text-gray-400 text-sm mb-8 leading-relaxed">
@@ -126,7 +129,7 @@ const SignUp = () => {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Username *"
                   required
-                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition min-h-[44px]"
                 />
 
                 <input
@@ -135,7 +138,7 @@ const SignUp = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email address *"
                   required
-                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition min-h-[44px]"
                 />
 
                 <div className="relative">
@@ -145,12 +148,12 @@ const SignUp = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password * (min 6 characters)"
                     required
-                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition pr-16"
+                    className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition pr-16 min-h-[44px]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs font-semibold"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs font-semibold min-w-[44px] min-h-[44px] flex items-center justify-center"
                   >
                     {showPassword ? "HIDE" : "SHOW"}
                   </button>
@@ -180,7 +183,7 @@ const SignUp = () => {
                   value={college}
                   onChange={(e) => setCollege(e.target.value)}
                   placeholder="College / Organization"
-                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition min-h-[44px]"
                 />
 
                 <input
@@ -188,7 +191,7 @@ const SignUp = () => {
                   value={socialLinks}
                   onChange={(e) => setSocialLinks(e.target.value)}
                   placeholder="Coding Profiles / Social URLs (comma-separated)"
-                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition"
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition min-h-[44px]"
                 />
 
                 <textarea
@@ -207,12 +210,12 @@ const SignUp = () => {
                 — Technical Arsenal (Optional)
               </h3>
 
-              {/* Checkboxes */}
+              {/* Skill checkboxes — 2-col on mobile, 3 on sm, 4 on md */}
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
                 {predefinedSkills.map((skill) => (
                   <label
                     key={skill}
-                    className={`flex items-center gap-2 px-3 py-2 rounded border cursor-pointer ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded border cursor-pointer min-h-[44px] ${
                       skills.includes(skill)
                         ? "bg-blue-500/20 border-blue-500"
                         : "bg-slate-800 border-slate-700"
@@ -228,8 +231,8 @@ const SignUp = () => {
                 ))}
               </div>
 
-              {/* Input */}
-              <div className="flex gap-2 mb-4">
+              {/* Custom skill input — stack on mobile */}
+              <div className="flex flex-col sm:flex-row gap-2 mb-4">
                 <input
                   value={skillInput}
                   onChange={(e) => setSkillInput(e.target.value)}
@@ -240,13 +243,13 @@ const SignUp = () => {
                     }
                   }}
                   placeholder="Add custom skill"
-                  className="flex-1 px-4 py-3 bg-slate-800 border border-slate-700 rounded"
+                  className="flex-1 px-4 py-3 bg-slate-800 border border-slate-700 rounded min-h-[44px]"
                 />
 
                 <button
                   type="button"
                   onClick={addSkill}
-                  className="px-4 bg-slate-800 border border-slate-700 rounded"
+                  className="px-4 bg-slate-800 border border-slate-700 rounded min-h-[44px] min-w-[44px] flex items-center justify-center self-start sm:self-auto"
                 >
                   <Plus size={20} />
                 </button>
@@ -257,10 +260,10 @@ const SignUp = () => {
                 {skills.map((skill) => (
                   <div
                     key={skill}
-                    className="bg-slate-800 px-3 py-1 rounded-full flex items-center gap-2 border border-slate-700"
+                    className="bg-slate-800 px-3 py-1 rounded-full flex items-center gap-2 border border-slate-700 min-h-[36px]"
                   >
                     <span className="text-xs">{skill}</span>
-                    <button onClick={() => removeSkill(skill)}>
+                    <button onClick={() => removeSkill(skill)} className="min-w-[20px] min-h-[20px] flex items-center justify-center">
                       <X size={14} />
                     </button>
                   </div>
@@ -272,17 +275,17 @@ const SignUp = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-400 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 font-bold py-3 rounded-lg transition"
+              className="w-full bg-blue-400 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-slate-900 font-bold py-3 rounded-lg transition min-h-[44px]"
             >
               {loading ? "CREATING..." : "CREATE PROFILE →"}
             </button>
           </form>
 
           {/* Footer */}
-          <div className="flex justify-center gap-6 text-xs text-gray-500 mt-8 pt-3 border-t border-gray-700 flex-wrap">
-            <Link to="/login" className="hover:text-gray-300 transition">ALREADY HAVE AN ACCOUNT?</Link>
-            <a href="#!" className="hover:text-gray-300 transition">PRIVACY_POLICY</a>
-            <a href="#!">TERMS_OF_SERVICE</a>
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs text-gray-500 mt-8 pt-3 border-t border-gray-700">
+            <Link to="/login" className="hover:text-gray-300 transition min-h-[44px] flex items-center">ALREADY HAVE AN ACCOUNT?</Link>
+            <a href="#!" className="hover:text-gray-300 transition min-h-[44px] flex items-center">PRIVACY_POLICY</a>
+            <a href="#!" className="min-h-[44px] flex items-center">TERMS_OF_SERVICE</a>
           </div>
 
         </div>

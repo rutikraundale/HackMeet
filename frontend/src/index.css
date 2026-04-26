@@ -1,0 +1,41 @@
+/* ── Responsive: no-scrollbar utility ── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Responsive: toast mobile position ── */
+@media (max-width: 640px) {
+  .toast-container {
+    top: auto;
+    bottom: 1rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+/* ── Responsive: notification dropdown ── */
+@media (max-width: 640px) {
+  .notification-dropdown {
+    width: calc(100vw - 2rem);
+    right: 0;
+    left: auto;
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+/* ── Responsive: tap targets minimum 44×44px ── */
+@media (max-width: 768px) {
+  button,
+  a,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ── Responsive: keyboard-safe form padding on mobile ── */
+@media (max-width: 640px) {
+  form {
+    padding-bottom: 120px;
+  }
+}

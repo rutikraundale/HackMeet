@@ -29,7 +29,7 @@ const NotificationBell = () => {
 		<div className="relative" ref={dropdownRef}>
 			<button
 				onClick={() => setIsOpen(!isOpen)}
-				className="p-2 rounded-full hover:bg-slate-800 transition relative text-gray-300"
+				className="p-2 min-w-[44px] min-h-[44px] rounded-full hover:bg-slate-800 transition relative text-gray-300 flex items-center justify-center"
 			>
 				<Bell className="w-5 h-5" />
 				{unreadCount > 0 && (
@@ -40,10 +40,11 @@ const NotificationBell = () => {
 			</button>
 
 			{isOpen && (
-				<div className="absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in duration-200">
+				/* notification-dropdown enables mobile width fix via index.css */
+				<div className="notification-dropdown absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in duration-200">
 					<div className="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
 						<h3 className="font-semibold text-white">Notifications</h3>
-						<button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">
+						<button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white p-1">
 							<X className="w-4 h-4" />
 						</button>
 					</div>
@@ -73,7 +74,7 @@ const NotificationBell = () => {
 											<div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-slate-800"></div>
 										)}
 									</div>
-									<div className="flex-1">
+									<div className="flex-1 min-w-0">
 										<p className="text-sm text-gray-200 leading-snug">
 											{n.type === "hackathon" ? (
 												<span className="font-semibold text-blue-400">New Hackathon</span>
@@ -89,7 +90,7 @@ const NotificationBell = () => {
 											})}
 										</p>
 									</div>
-									<div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition">
+									<div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition shrink-0">
 										{!n.isRead && (
 											<button
 												onClick={(e) => {

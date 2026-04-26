@@ -57,7 +57,6 @@ const Projects = () => {
           setLatestCommits(data.data);
           addToast("Fetched latest commits!", "success");
       } else if (data.data) {
-          // Fallback for single commit
           setLatestCommits([data.data]);
           addToast("Fetched latest activity!", "success");
       } else {
@@ -108,7 +107,7 @@ const Projects = () => {
 
   if (loading) {
     return (
-      <div className="p-6 bg-gray-950 min-h-screen text-white">
+      <div className="p-4 md:p-6 bg-gray-950 min-h-screen text-white">
          <div className="grid md:grid-cols-2 gap-4">
              <LoadingSkeleton variant="card" />
              <LoadingSkeleton variant="card" />
@@ -119,17 +118,17 @@ const Projects = () => {
 
   if (!team) {
     return (
-      <div className="p-6 bg-gray-950 min-h-screen text-white flex flex-col items-center justify-center">
+      <div className="p-4 md:p-6 bg-gray-950 min-h-screen text-white flex flex-col items-center justify-center">
         <div className="text-6xl mb-4">🚀</div>
         <h2 className="text-2xl font-bold mb-2">No Active Project</h2>
-        <p className="text-gray-400 mb-6 text-center max-w-md">
+        <p className="text-gray-400 mb-6 text-center max-w-md px-4">
           You are not currently part of any team. Join a hackathon or discover teammates to start building!
         </p>
-        <div className="flex gap-4">
-          <Link to="/discover" className="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg font-medium transition">
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto px-4">
+          <Link to="/discover" className="bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-lg font-medium transition text-center">
             Find Teammates
           </Link>
-          <Link to="/team-builder" className="bg-gray-800 hover:bg-gray-700 px-6 py-2 rounded-lg font-medium transition text-white border border-gray-700">
+          <Link to="/team-builder" className="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-lg font-medium transition text-white border border-gray-700 text-center">
             Create a Team
           </Link>
         </div>
@@ -142,10 +141,10 @@ const Projects = () => {
   const progress = totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
 
   return (
-    <div className="p-6 bg-gray-950 min-h-screen text-white">
+    <div className="p-4 md:p-6 bg-gray-950 min-h-screen text-white">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">{team.teamName}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold">{team.teamName}</h1>
         <p className="text-gray-400 mt-1">Hackathon: <span className="text-blue-400">{team.hackathonId?.name || "Unknown"}</span></p>
       </div>
 
@@ -154,22 +153,23 @@ const Projects = () => {
         <div className="md:col-span-2 space-y-6">
           
           {/* GitHub Integration */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 md:p-5">
             <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
               <FaGithub size={18} /> GitHub Integration
             </h3>
             
-            <div className="flex gap-3 mb-4">
+            {/* Repo input row: stacked on mobile, side-by-side on sm+ */}
+            <div className="flex flex-col sm:flex-row gap-2 mb-4">
               <input 
                 type="text" 
                 value={repoLink}
                 onChange={(e) => setRepoLink(e.target.value)}
                 placeholder="https://github.com/username/repo"
-                className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500"
+                className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 min-h-[44px]"
               />
               <button 
                 onClick={handleUpdateRepo}
-                className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap"
+                className="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap min-h-[44px]"
               >
                 Save Link
               </button>
@@ -177,12 +177,12 @@ const Projects = () => {
 
             {team.gitRepoLink && (
               <div className="mt-6 border-t border-gray-800 pt-4">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                   <span className="text-sm text-gray-400">Latest Activity</span>
                   <button 
                     onClick={fetchLatestCommit}
                     disabled={fetchingCommit}
-                    className="flex items-center gap-2 text-xs bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+                    className="flex items-center gap-2 text-xs bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-lg transition disabled:opacity-50 min-h-[44px] self-start sm:self-auto"
                   >
                     <RefreshCw size={14} className={fetchingCommit ? "animate-spin" : ""} /> 
                     Fetch Commits
@@ -194,8 +194,8 @@ const Projects = () => {
                     {latestCommits.map((commit, idx) => (
                       <div key={idx} className="bg-gray-800 border border-gray-700 rounded-lg p-4 transition hover:border-gray-600">
                         <div className="flex items-start gap-3">
-                          <GitBranch size={16} className="text-blue-400 mt-1" />
-                          <div className="flex-1">
+                          <GitBranch size={16} className="text-blue-400 mt-1 shrink-0" />
+                          <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium line-clamp-1">{commit.commit.message}</p>
                             <p className="text-xs text-gray-400 mt-1">
                               by <span className="text-gray-300">{commit.commit.author.name}</span> • {new Date(commit.commit.author.date).toLocaleString()}
@@ -216,7 +216,7 @@ const Projects = () => {
           </div>
 
           {/* Tasks/Todos */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 md:p-5">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-sm font-semibold tracking-wide flex items-center">
                 TEAM TASKS <span className="text-xs text-gray-500 font-normal ml-2">({doneCount}/{totalCount} done)</span>
@@ -240,11 +240,11 @@ const Projects = () => {
                 onChange={(e) => setNewTodo(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAddTodo()}
                 placeholder="Add a new task..."
-                className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 min-h-[44px]"
               />
               <button 
                 onClick={handleAddTodo}
-                className="bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 py-2 rounded-lg transition"
+                className="bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 py-2 rounded-lg transition min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
                 <Plus size={16} />
               </button>
@@ -269,7 +269,7 @@ const Projects = () => {
                     </div>
                     <button 
                       onClick={() => handleDeleteTodo(task.id)}
-                      className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition"
+                      className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition p-1"
                     >
                       <Plus size={14} className="rotate-45" />
                     </button>
@@ -283,7 +283,7 @@ const Projects = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Team Members */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 md:p-5">
             <h3 className="text-xs text-gray-500 tracking-widest mb-4">TEAM MEMBERS</h3>
             <div className="space-y-3">
               {team.members.map((m) => {
@@ -291,20 +291,20 @@ const Projects = () => {
                 const initials = (m.username || "??").slice(0,2).toUpperCase();
                 const color = `hsl(${(m.username || "").length * 40}, 40%, 25%)`;
                 return (
-                  <div key={m._id} className="flex items-center gap-3">
+                  <div key={m._id} className="flex items-center gap-3 min-h-[44px]">
                     {m.profilePicture ? (
-                      <img src={m.profilePicture} alt={m.username} className="w-8 h-8 rounded-lg object-cover" />
+                      <img src={m.profilePicture} alt={m.username} className="w-8 h-8 rounded-lg object-cover shrink-0" />
                     ) : (
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold" style={{ backgroundColor: color, color: "#fff" }}>
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0" style={{ backgroundColor: color, color: "#fff" }}>
                         {initials}
                       </div>
                     )}
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm text-white flex items-center gap-1">
-                        {m.username} 
-                        {isLeader && <span className="text-yellow-400 text-xs" title="Team Leader">👑</span>}
+                        <span className="truncate">{m.username}</span>
+                        {isLeader && <span className="text-yellow-400 text-xs shrink-0" title="Team Leader">👑</span>}
                       </p>
-                      <p className="text-xs text-gray-500">{m.college || "Developer"} <span className="text-green-500 text-[10px] ml-1">Accepted</span></p>
+                      <p className="text-xs text-gray-500 truncate">{m.college || "Developer"} <span className="text-green-500 text-[10px] ml-1">Accepted</span></p>
                     </div>
                   </div>
                 );
@@ -315,19 +315,19 @@ const Projects = () => {
                 const initials = (m.username || "??").slice(0,2).toUpperCase();
                 const color = `hsl(${(m.username || "").length * 40}, 40%, 25%)`;
                 return (
-                  <div key={`pending-${m._id}`} className="flex items-center gap-3 opacity-60">
+                  <div key={`pending-${m._id}`} className="flex items-center gap-3 opacity-60 min-h-[44px]">
                     {m.profilePicture ? (
-                      <img src={m.profilePicture} alt={m.username} className="w-8 h-8 rounded-lg object-cover grayscale" />
+                      <img src={m.profilePicture} alt={m.username} className="w-8 h-8 rounded-lg object-cover grayscale shrink-0" />
                     ) : (
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold grayscale" style={{ backgroundColor: color, color: "#fff" }}>
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold grayscale shrink-0" style={{ backgroundColor: color, color: "#fff" }}>
                         {initials}
                       </div>
                     )}
-                    <div>
-                      <p className="text-sm text-white flex items-center gap-1">
+                    <div className="min-w-0">
+                      <p className="text-sm text-white flex items-center gap-1 truncate">
                         {m.username} 
                       </p>
-                      <p className="text-xs text-gray-500">{m.college || "Developer"} <span className="text-yellow-500 text-[10px] ml-1">Pending...</span></p>
+                      <p className="text-xs text-gray-500 truncate">{m.college || "Developer"} <span className="text-yellow-500 text-[10px] ml-1">Pending...</span></p>
                     </div>
                   </div>
                 );

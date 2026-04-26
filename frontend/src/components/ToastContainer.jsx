@@ -43,19 +43,20 @@ const ToastContainer = () => {
   };
 
   return (
-    <div className="fixed top-20 right-6 z-50 space-y-3 pointer-events-none">
+    /* toast-container class enables mobile repositioning via index.css */
+    <div className="toast-container fixed top-20 right-6 z-[200] space-y-3 pointer-events-none">
       {toasts.map(toast => (
         <div
           key={toast.id}
-          className={`flex items-center gap-3 p-4 rounded-lg border ${getBgColor(toast.type)} text-white pointer-events-auto animate-in slide-in-from-top-4 fade-in`}
+          className={`flex items-center gap-3 p-4 rounded-lg border ${getBgColor(toast.type)} text-white pointer-events-auto animate-in slide-in-from-top-4 fade-in w-full`}
         >
           {getIcon(toast.type)}
-          <span className="text-sm">{toast.message}</span>
+          <span className="text-sm flex-1">{toast.message}</span>
           <button
             onClick={() => {
               setToasts(prev => prev.filter(t => t.id !== toast.id));
             }}
-            className="ml-auto hover:opacity-70"
+            className="ml-auto hover:opacity-70 shrink-0"
           >
             <X size={16} />
           </button>

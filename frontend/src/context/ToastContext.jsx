@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useCallback } from "react";
+import { showToast } from "../utils/toastUtils";
 
 const ToastContext = createContext();
 
@@ -20,6 +21,10 @@ export const ToastProvider = ({ children }) => {
 
   const addToast = useCallback(
     (message, type = "info", duration = 3000) => {
+      // Bridge to toastUtils so ToastContainer (which subscribes to toastUtils) renders the toast
+      showToast(message, type);
+
+      // Also update local context state for any consumers reading toasts directly
       const id = `toast-${Date.now()}-${Math.random()}`;
       setToasts((prev) => [...prev, { id, message, type }]);
 
