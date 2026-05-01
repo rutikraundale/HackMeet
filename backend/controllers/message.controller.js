@@ -2,6 +2,7 @@ import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import { getReceiverSocketId, io } from "../socket/socket.js";
 import { createNotification } from "./notification.controller.js";
+import { notifyViaTelegram } from "../utils/telegram.js";
 
 // @desc    Send a message
 // @route   POST /api/messages/:receiverId
@@ -51,13 +52,19 @@ export const sendMessage = async (req, res) => {
             io.to(receiverSocketId).emit("updateConversation", conversation._id);
         }
 
-        // Send a notification to the receiver
+        // In-app notification
         createNotification(
             receiverId,
             senderId,
             "message",
             `You have a new message from ${req.user.username}`,
             `/messages`
+        );
+
+        // Telegram notification (fire-and-forget)
+        notifyViaTelegram(
+            receiverId,
+            `💬 *New message from ${req.user.username}*\n\n${text.length > 100 ? text.slice(0, 100) + "…" : text}\n\n_Open HackMeet to reply._`
         );
 
         res.status(201).json({ success: true, data: newMessage });

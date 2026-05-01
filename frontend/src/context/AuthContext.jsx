@@ -37,8 +37,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   // ── Login ────────────────────────────────────────────────────────────────
-  const login = async ({ email, password }) => {
-    const data = await post("/auth/login", { email, password });
+  const login = async ({ identifier, password }) => {
+    const data = await post("/auth/login", { identifier, password });
     setUser(data.user);
     return data;
   };
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
 
   // ── Update Profile ───────────────────────────────────────────────────────
   const updateProfile = async (formData) => {
-    const url = `${import.meta.env.VITE_API_URL || "http://localhost:8000/api"}/users/me/update`;
+    const url = `${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/users/me/update`;
     const res = await fetch(url, {
       method: "PUT",
       credentials: "include",

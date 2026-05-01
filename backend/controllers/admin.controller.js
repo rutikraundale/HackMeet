@@ -2,6 +2,7 @@ import Team from "../models/team.model.js";
 import User from "../models/user.model.js";
 import Hackathon from "../models/hackathons.model.js";
 import { createNotification } from "./notification.controller.js";
+import { notifyViaTelegram } from "../utils/telegram.js";
 
 // @desc    Create a new hackathon
 // @route   POST /api/admin/hackathons
@@ -34,8 +35,9 @@ export const createHackathon = async (req, res) => {
         });
 
         // Notify all users about the new hackathon
-        const users = await User.find({ isAdmin: { $ne: true } }).select("_id");
+        const users = await User.find({ isAdmin: { $ne: true } }).select("_id telegramChatId");
         users.forEach(user => {
+            // In-app notification
             createNotification(
                 user._id,
                 req.user._id,
@@ -43,6 +45,13 @@ export const createHackathon = async (req, res) => {
                 name,
                 `/hackathon/${createdHackathon._id}`
             );
+            // Telegram notification (only to those who connected)
+            if (user.telegramChatId) {
+                notifyViaTelegram(
+                    user._id,
+                    `🏆 *New Hackathon Alert!*\n\n*${name}* is now live on HackMeet!\n\nOpen HackMeet to explore and register your team.`
+                );
+            }
         });
     } catch (error) {
         console.error("Error creating hackathon:", error);

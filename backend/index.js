@@ -11,6 +11,7 @@ import hackathonRoutes from "./routes/hackathon.route.js";
 import teamRoutes from "./routes/team.route.js";
 import messageRoutes from "./routes/message.route.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import telegramRoutes from "./routes/telegram.route.js";
 import { app, server } from "./socket/socket.js";
 
 dotenv.config();
@@ -29,6 +30,7 @@ app.use("/api/hackathons", hackathonRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/telegram", telegramRoutes);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get("/", (req, res) => {

@@ -132,6 +132,8 @@ const Profile = () => {
     profilePic: user?.profilePicture || "",
     college: user?.college || "",
     status: user?.status || "open",
+    telegramChatId: user?.telegramChatId || null,
+    _id: user?._id || "",
   };
 
   return (

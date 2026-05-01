@@ -8,9 +8,8 @@ const InviteTab = ({ onAccept, onReject }) => {
   const [invitations, setInvitations] = useState([]);
 
   useEffect(() => {
-    if (user?.invitations) {
-      setInvitations(user.invitations);
-    }
+    // Ensure we always have an array and handle cases where it might be undefined/null
+    setInvitations(user?.invitations || []);
   }, [user]);
 
   const handleAccept = async (inv) => {
@@ -53,15 +52,15 @@ const InviteTab = ({ onAccept, onReject }) => {
           </p>
         </div>
       ) : (
-        invitations.map((inv) => (
+        invitations.filter(inv => inv && typeof inv === 'object' && inv._id).map((inv) => (
           <div
             key={inv._id}
             className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center justify-between hover:border-slate-600 transition"
           >
             <div>
-              <h4 className="font-semibold text-white">{inv.teamName}</h4>
-              <p className="text-gray-400 text-sm">{inv.hackathonId?.name || "Unknown Hackathon"}</p>
-              <p className="text-gray-500 text-xs mt-0.5">Invited by {inv.teamLeader?.username || "Unknown Sender"}</p>
+              <h4 className="font-semibold text-white">{inv.teamName || "Unnamed Team"}</h4>
+              <p className="text-gray-400 text-sm">{inv.hackathonId?.name || "Hackathon Details Loading..."}</p>
+              <p className="text-gray-500 text-xs mt-0.5">Invited by {inv.teamLeader?.username || "Team Leader"}</p>
             </div>
 
             <div className="flex gap-2 shrink-0">

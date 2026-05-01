@@ -1,6 +1,7 @@
 import Team from "../models/team.model.js";
 import User from "../models/user.model.js";
 import { createNotification } from "./notification.controller.js";
+import { notifyViaTelegram } from "../utils/telegram.js";
 
 // @desc    Create a new team
 // @route   POST /api/teams
@@ -14,9 +15,25 @@ export const createTeam = async (req, res) => {
             return res.status(400).json({ success: false, message: "teamName and hackathonId are required." });
         }
 
-        // Check if user is already in a team
-        if (req.user.teamId) {
-            return res.status(400).json({ success: false, message: "You are already part of a team." });
+        // ── Block if user's status is "busy" ───────────────────────────────────
+        if (req.user.status === "busy") {
+            return res.status(400).json({
+                success: false,
+                message: "Your status is set to 'Busy'. Update your status to 'Open' before creating a new team."
+            });
+        }
+
+        // ── Block only if the user is already an active member of a team for THIS hackathon ─────
+        const existingTeamForHackathon = await Team.findOne({
+            hackathonId,
+            members: userId
+        });
+
+        if (existingTeamForHackathon) {
+            return res.status(400).json({
+                success: false,
+                message: `You are already a member of team "${existingTeamForHackathon.teamName}" for this hackathon. Leave that team before creating a new one for the same event.`
+            });
         }
 
         const team = new Team({
@@ -172,13 +189,19 @@ export const inviteUser = async (req, res) => {
             message: "Invitation sent successfully."
         });
 
-        // Notify user about the invitation
+        // Notify user about the invitation (in-app)
         createNotification(
             targetUserId,
             leaderUser._id,
             "invitation",
             `${leaderUser.username} invited you to join team ${team.teamName}`,
             `/profile?tab=invite`
+        );
+
+        // Telegram notification
+        notifyViaTelegram(
+            targetUserId,
+            `🎮 *Team Invitation!*\n\n*${leaderUser.username}* has invited you to join team *${team.teamName}*\n\nOpen HackMeet \u2192 Profile \u2192 Invitations to respond.`
         );
 
     } catch (error) {
@@ -590,13 +613,19 @@ export const requestToJoin = async (req, res) => {
 
         res.status(200).json({ success: true, message: "Request sent successfully." });
 
-        // Notify team leader about the join request
+        // Notify team leader about the join request (in-app)
         createNotification(
             team.teamLeader,
             userId,
             "request",
             `${req.user.username} requested to join your team ${team.teamName}`,
             `/profile?tab=team`
+        );
+
+        // Telegram notification
+        notifyViaTelegram(
+            team.teamLeader,
+            `🙋 *New Join Request!*\n\n*${req.user.username}* wants to join your team *${team.teamName}*\n\nOpen HackMeet \u2192 Profile \u2192 Team to accept or reject.`
         );
     } catch (error) {
         console.error("Error requesting to join:", error);
@@ -646,13 +675,19 @@ export const acceptJoinRequest = async (req, res) => {
 
         res.status(200).json({ success: true, message: "Request accepted." });
 
-        // Notify user that their request was accepted
+        // Notify user that their request was accepted (in-app)
         createNotification(
             userId,
             leaderId,
             "invitation",
             `Your request to join ${team.teamName} has been accepted!`,
             `/profile?tab=team`
+        );
+
+        // Telegram notification
+        notifyViaTelegram(
+            userId,
+            `✅ *Request Accepted!*\n\nYou are now a member of team *${team.teamName}*! \ud83c�\n\nOpen HackMeet \u2192 Profile \u2192 Team to see your team.`
         );
     } catch (error) {
         console.error("Error accepting request:", error);

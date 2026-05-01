@@ -5,7 +5,7 @@ import { useToast } from "../context/ToastContext";
 import ToastContainer from "../components/ToastContainer";
 
 const SignIn = () => {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -15,17 +15,17 @@ const SignIn = () => {
 
   const handleSignIn = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!identifier || !password) {
       addToast("Please fill in all required fields.", "warning");
       return;
     }
     setLoading(true);
     try {
-      await login({ email, password });
+      await login({ identifier, password });
       addToast("Welcome back! You're now signed in.", "success");
       navigate("/dashboard");
     } catch (err) {
-      addToast("Invalid email or password. Please try again.", "error");
+      addToast("Invalid email/username or password. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -76,13 +76,13 @@ const SignIn = () => {
                 {/* Email */}
                 <div>
                   <label className="block text-xs text-gray-400 mb-3 font-semibold">
-                    Email Address
+                    Email or Username
                   </label>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email address"
+                    type="text"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder="Email or username"
                     className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition min-h-[44px]"
                   />
                 </div>

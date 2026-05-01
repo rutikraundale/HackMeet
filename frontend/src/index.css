@@ -16,10 +16,15 @@
 /* ── Responsive: notification dropdown ── */
 @media (max-width: 640px) {
   .notification-dropdown {
-    width: calc(100vw - 2rem);
-    right: 0;
-    left: auto;
-    max-width: calc(100vw - 2rem);
+    position: fixed;
+    top: 64px; /* Adjust based on navbar height */
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100vw - 1.5rem);
+    max-width: 400px;
+    right: auto;
+    margin: 0 auto;
+    z-index: 9999;
   }
 }
 

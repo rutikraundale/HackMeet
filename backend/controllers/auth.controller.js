@@ -8,14 +8,14 @@ import cloudinary, { uploadToCloudinary } from "../utils/cloudinary.js";
 //  POST /api/auth/signup
 // ─────────────────────────────────────────────────────────────────────────────
 export const signup = async (req, res) => {
-    const { username, email, password, bio, college, skills, socialLinks } = req.body;
+    const { username, email, password, mobileNumber, bio, college, skills, socialLinks } = req.body;
 
     try {
         // ── Validate input ────────────────────────────────────────────────────
-        if (!username || !email || !password) {
+        if (!username || !email || !password || !mobileNumber) {
             return res.status(400).json({
                 success: false,
-                message: "Username, email and password are required."
+                message: "Username, email, password and mobile number are required."
             });
         }
 
@@ -71,6 +71,7 @@ export const signup = async (req, res) => {
             username,
             email,
             password: hashedPassword,
+            mobileNumber,
             bio,
             college,
             profilePicture: profilePictureUrl,
@@ -99,18 +100,21 @@ export const signup = async (req, res) => {
 //  POST /api/auth/login
 // ─────────────────────────────────────────────────────────────────────────────
 export const login = async (req, res) => {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body; // 'identifier' can be email or username
+    const email = identifier; // for backward compatibility/clarity in the rest of the block
 
     try {
-        if (!email || !password) {
+        if (!identifier || !password) {
             return res.status(400).json({
                 success: false,
-                message: "Email and password are required."
+                message: "Email/Username and password are required."
             });
         }
 
         // ── Find user ─────────────────────────────────────────────────────────
-        const user = await User.findOne({ email }).populate({
+        const user = await User.findOne({ 
+            $or: [{ email: identifier }, { username: identifier }] 
+        }).populate({
             path: "invitations",
             populate: [
                 { path: "hackathonId", select: "name" },
@@ -120,7 +124,7 @@ export const login = async (req, res) => {
         if (!user) {
             return res.status(200).json({
                 success: false,
-                message: "Invalid email or password."
+                message: "Invalid email/username or password."
             });
         }
 
@@ -340,6 +344,15 @@ export const updateProfile = async (req, res) => {
         }
 
         await user.save();
+
+        // Populate invitations for the response
+        await user.populate({
+            path: "invitations",
+            populate: [
+                { path: "hackathonId", select: "name" },
+                { path: "teamLeader", select: "username profilePicture" }
+            ]
+        });
 
         const userWithoutPassword = user.toObject();
         delete userWithoutPassword.password;

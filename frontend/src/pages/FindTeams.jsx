@@ -11,12 +11,20 @@ const FindTeams = () => {
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [requesting, setRequesting] = useState(null);
+  // hackathonId the user is already participating in (null if none)
+  const [activeHackathonId, setActiveHackathonId] = useState(null);
 
   const fetchOpenTeams = async () => {
     setLoading(true);
     try {
-      const data = await get("/teams/open");
-      setTeams(data.data || []);
+      const [teamsData, myTeamData] = await Promise.all([
+        get("/teams/open"),
+        get("/teams/my-team").catch(() => ({ data: null }))
+      ]);
+      setTeams(teamsData.data || []);
+      if (myTeamData?.data?.hackathonId) {
+        setActiveHackathonId(myTeamData.data.hackathonId._id || myTeamData.data.hackathonId);
+      }
     } catch (err) {
       console.error("Error fetching open teams:", err);
       addToast(err.message || "Failed to load open teams", "error");
@@ -29,18 +37,23 @@ const FindTeams = () => {
     fetchOpenTeams();
   }, []);
 
-  const handleRequestJoin = async (teamId) => {
-    if (user?.teamId) {
-      addToast("You are already in a team. Leave your current team first.", "warning");
+  const handleRequestJoin = async (team) => {
+    if (user?.status === "busy") {
+      addToast("Your status is 'Busy'. Update it to 'Open' in your profile first.", "warning");
       return;
     }
-    setRequesting(teamId);
+    const teamHackathonId = team.hackathonId?._id || team.hackathonId;
+    const alreadyIn = activeHackathonId && activeHackathonId.toString() === teamHackathonId?.toString();
+    if (alreadyIn) {
+      addToast("You are already in a team for this hackathon.", "warning");
+      return;
+    }
+    setRequesting(team._id);
     try {
-      await post(`/teams/${teamId}/request`);
+      await post(`/teams/${team._id}/request`);
       addToast("Join request sent successfully to the team leader!", "success");
-      // Update local state to reflect requested status
       setTeams(prev => prev.map(t => {
-        if (t._id === teamId) {
+        if (t._id === team._id) {
           return { ...t, joinRequests: [...(t.joinRequests || []), user._id] };
         }
         return t;
@@ -81,6 +94,10 @@ const FindTeams = () => {
             const currentSize = team.members.length;
             const spotsLeft = Math.max(0, maxSize - currentSize);
             const hasRequested = team.joinRequests?.includes(user?._id);
+            const teamHackathonId = hackathon._id || hackathon;
+            const alreadyInThisHackathon = activeHackathonId && activeHackathonId.toString() === teamHackathonId?.toString();
+            const isBusy = user?.status === "busy";
+            const canRequest = !hasRequested && !alreadyInThisHackathon && !isBusy;
 
             return (
               <div
@@ -113,30 +130,29 @@ const FindTeams = () => {
                 </div>
 
                 <button
-                  onClick={() => handleRequestJoin(team._id)}
-                  disabled={hasRequested || requesting === team._id || user?.teamId}
+                  onClick={() => handleRequestJoin(team)}
+                  disabled={!canRequest || requesting === team._id}
+                  title={alreadyInThisHackathon ? "Already in a team for this hackathon" : isBusy ? "Set status to Open first" : ""}
                   className={`w-full py-2.5 rounded-lg text-sm font-medium transition flex justify-center items-center gap-2 ${
                     hasRequested
                       ? 'bg-slate-700 text-gray-400 cursor-not-allowed'
-                      : user?.teamId
-                      ? 'bg-slate-800 text-gray-500 border border-slate-700 cursor-not-allowed'
+                      : alreadyInThisHackathon
+                      ? 'bg-gray-700 text-gray-400 cursor-not-allowed border border-gray-600'
+                      : isBusy
+                      ? 'bg-yellow-900/40 text-yellow-500 cursor-not-allowed border border-yellow-700/40'
                       : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}
                 >
                   {requesting === team._id ? (
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : hasRequested ? (
-                    <>
-                      <Check size={16} /> Request Sent
-                    </>
-                  ) : user?.teamId ? (
-                    <>
-                      <Users size={16} /> Already in a team
-                    </>
+                    <><Check size={16} /> Request Sent</>
+                  ) : alreadyInThisHackathon ? (
+                    <><Users size={16} /> ✅ Participating</>
+                  ) : isBusy ? (
+                    <><Clock size={16} /> Busy</>
                   ) : (
-                    <>
-                      <Users size={16} /> Request to Join
-                    </>
+                    <><Users size={16} /> Request to Join</>
                   )}
                 </button>
               </div>

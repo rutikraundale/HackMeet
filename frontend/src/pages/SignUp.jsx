@@ -9,6 +9,7 @@ const SignUp = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
   const [bio, setBio] = useState("");
   const [college, setCollege] = useState("");
   const [socialLinks, setSocialLinks] = useState("");
@@ -48,12 +49,17 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username || !email || !password) {
-      addToast("Please check your details and try again.", "warning");
+    if (!username || !email || !password || !mobileNumber) {
+      addToast("Please fill in all required fields.", "warning");
+      return;
+    }
+    const indianMobileRegex = /^[6-9]\d{9}$/;
+    if (!indianMobileRegex.test(mobileNumber)) {
+      addToast("Please enter a valid 10-digit Indian mobile number.", "warning");
       return;
     }
     if (password.length < 6) {
-      addToast("Please check your details and try again.", "warning");
+      addToast("Password must be at least 6 characters.", "warning");
       return;
     }
     setLoading(true);
@@ -67,6 +73,7 @@ const SignUp = () => {
       formData.append("username", username);
       formData.append("email", email);
       formData.append("password", password);
+      formData.append("mobileNumber", mobileNumber);
       if (bio) formData.append("bio", bio);
       if (college) formData.append("college", college);
       skills.forEach(skill => formData.append("skills", skill));
@@ -126,8 +133,8 @@ const SignUp = () => {
                 <input
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Username *"
+                  onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
+                  placeholder="Username * (no spaces allowed)"
                   required
                   className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition min-h-[44px]"
                 />
@@ -137,6 +144,15 @@ const SignUp = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email address *"
+                  required
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition min-h-[44px]"
+                />
+
+                <input
+                  type="tel"
+                  value={mobileNumber}
+                  onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  placeholder="Indian Mobile Number (10 digits) *"
                   required
                   className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 transition min-h-[44px]"
                 />

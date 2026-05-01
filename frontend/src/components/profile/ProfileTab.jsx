@@ -1,5 +1,5 @@
 import React from "react";
-import { Edit, Save, X, Mail, GraduationCap, FileText, Link as LinkIcon, Code, Camera, Trash2 } from "lucide-react";
+import { Edit, Save, X, Mail, GraduationCap, FileText, Link as LinkIcon, Code, Camera, Trash2, Send, CheckCircle2 } from "lucide-react";
 
 const ProfileTab = ({
   user,
@@ -221,6 +221,38 @@ const ProfileTab = ({
                   )) : (
                     <span className="text-sm text-gray-500 italic">No links added yet</span>
                   )}
+                </div>
+              )}
+              </div>
+
+            {/* Telegram Connect */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Send size={18} className="text-blue-400" />
+                <h4 className="text-sm font-semibold text-gray-200 tracking-wide">TELEGRAM NOTIFICATIONS</h4>
+              </div>
+              {user.telegramChatId ? (
+                <div className="flex items-center gap-3 bg-green-900/20 border border-green-500/30 rounded-xl px-4 py-3">
+                  <CheckCircle2 size={18} className="text-green-400 shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-green-400">Connected</p>
+                    <p className="text-xs text-gray-400">You'll receive team invites & hackathon alerts on Telegram.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl px-4 py-4 space-y-3">
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Connect Telegram to get real-time notifications for team invitations and hackathon updates.
+                  </p>
+                  <a
+                    href={`https://t.me/${import.meta.env.VITE_TELEGRAM_BOT_USERNAME}?start=${user._id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#229ED9] hover:bg-[#1a8bbf] text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-sky-900/30 active:scale-95"
+                  >
+                    <Send size={15} />
+                    Connect Telegram for Notifications
+                  </a>
                 </div>
               )}
             </div>

@@ -40,14 +40,24 @@ const NotificationBell = () => {
 			</button>
 
 			{isOpen && (
-				/* notification-dropdown enables mobile width fix via index.css */
-				<div className="notification-dropdown absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in duration-200">
-					<div className="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
-						<h3 className="font-semibold text-white">Notifications</h3>
-						<button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white p-1">
-							<X className="w-4 h-4" />
-						</button>
-					</div>
+				<>
+					{/* Backdrop for mobile */}
+					<div 
+						className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[90] md:hidden"
+						onClick={() => setIsOpen(false)}
+					/>
+					
+					/* notification-dropdown enables mobile width fix via index.css */
+					<div className="notification-dropdown absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-[100] overflow-hidden animate-in fade-in zoom-in duration-200">
+						<div className="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
+							<h3 className="font-semibold text-white">Notifications</h3>
+							<button 
+								onClick={() => setIsOpen(false)} 
+								className="text-gray-400 hover:text-white p-2 min-w-[44px] min-h-[44px] flex items-center justify-center"
+							>
+								<X className="w-5 h-5" />
+							</button>
+						</div>
 
 					<div className="max-h-96 overflow-y-auto">
 						{notifications.length === 0 ? (
@@ -59,23 +69,23 @@ const NotificationBell = () => {
 							notifications.map((n) => (
 								<div
 									key={n._id}
-									className={`p-4 border-b border-slate-700/50 flex gap-3 hover:bg-slate-700/30 transition cursor-pointer relative group ${
+									className={`p-3 md:p-4 border-b border-slate-700/50 flex gap-2 md:gap-3 hover:bg-slate-700/30 transition cursor-pointer relative group ${
 										!n.isRead ? "bg-blue-500/5" : ""
 									}`}
 									onClick={() => handleNotificationClick(n)}
 								>
-									<div className="relative">
+									<div className="relative shrink-0">
 										<img
 											src={n.sender?.profilePic || n.sender?.profilePicture || "/default-avatar.png"}
 											alt=""
-											className="w-10 h-10 rounded-full object-cover border border-slate-600"
+											className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover border border-slate-600"
 										/>
 										{!n.isRead && (
-											<div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-slate-800"></div>
+											<div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 md:w-3 md:h-3 bg-blue-500 rounded-full border-2 border-slate-800"></div>
 										)}
 									</div>
 									<div className="flex-1 min-w-0">
-										<p className="text-sm text-gray-200 leading-snug">
+										<p className="text-xs md:text-sm text-gray-200 leading-snug">
 											{n.type === "hackathon" ? (
 												<span className="font-semibold text-blue-400">New Hackathon</span>
 											) : (
@@ -83,24 +93,24 @@ const NotificationBell = () => {
 											)}{" "}
 											{n.content}
 										</p>
-										<p className="text-xs text-gray-500 mt-1">
+										<p className="text-[10px] md:text-xs text-gray-500 mt-1">
 											{new Date(n.createdAt).toLocaleTimeString([], {
 												hour: "2-digit",
 												minute: "2-digit",
 											})}
 										</p>
 									</div>
-									<div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition shrink-0">
+									<div className="flex flex-col gap-2 md:opacity-0 group-hover:opacity-100 transition shrink-0 self-center">
 										{!n.isRead && (
 											<button
 												onClick={(e) => {
 													e.stopPropagation();
 													markAsRead(n._id);
 												}}
-												className="p-1 hover:text-blue-400 text-gray-500"
+												className="p-1.5 hover:text-blue-400 text-gray-400 bg-slate-700/50 md:bg-transparent rounded-md"
 												title="Mark as read"
 											>
-												<Check className="w-3.5 h-3.5" />
+												<Check className="w-3.5 h-3.5 md:w-4 md:h-4" />
 											</button>
 										)}
 										<button
@@ -108,10 +118,10 @@ const NotificationBell = () => {
 												e.stopPropagation();
 												deleteNotification(n._id);
 											}}
-											className="p-1 hover:text-red-400 text-gray-500"
+											className="p-1.5 hover:text-red-400 text-gray-400 bg-slate-700/50 md:bg-transparent rounded-md"
 											title="Delete"
 										>
-											<Trash2 className="w-3.5 h-3.5" />
+											<Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
 										</button>
 									</div>
 								</div>
@@ -129,7 +139,8 @@ const NotificationBell = () => {
 							</button>
 						</div>
 					)}
-				</div>
+					</div>
+				</>
 			)}
 		</div>
 	);

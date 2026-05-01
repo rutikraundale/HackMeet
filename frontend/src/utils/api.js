@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 /**
  * Centralized fetch wrapper with credentials, JSON handling,
@@ -6,6 +6,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
  */
 const api = async (endpoint, options = {}) => {
   const url = `${API_BASE}${endpoint}`;
+  console.log(url)
 
   const config = {
     credentials: "include", // send cookies cross-origin

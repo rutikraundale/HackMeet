@@ -31,6 +31,16 @@ const userSchema = new mongoose.Schema({
         type: [String],
         required: false
     },
+    mobileNumber: {
+        type: String,
+        required: [true, "Mobile number is required"],
+        unique: true,
+        match: [/^[6-9]\d{9}$/, "Please enter a valid 10-digit Indian mobile number"]
+    },
+    telegramChatId: {
+        type: String,
+        default: null,
+    },
     projects: {
         type: [String],
         required: false

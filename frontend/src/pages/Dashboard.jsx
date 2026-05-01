@@ -3,33 +3,53 @@ import { useNavigate } from "react-router-dom";
 import { get } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 import LoadingSkeleton from "../components/LoadingSkeleton";
+import { useToast } from "../context/ToastContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [hackathons, setHackathons] = useState([]);
   const [loading, setLoading] = useState(true);
+  // hackathonId of the team the user is currently active in (null if none)
+  const [activeHackathonId, setActiveHackathonId] = useState(null);
 
   useEffect(() => {
-    const fetchHackathons = async () => {
+    const fetchData = async () => {
       try {
-        const data = await get("/hackathons");
-        setHackathons(data.data || []);
+        const [hackData, teamData] = await Promise.all([
+          get("/hackathons"),
+          get("/teams/my-team").catch(() => ({ data: null }))
+        ]);
+        setHackathons(hackData.data || []);
+        // If user has an active team, record its hackathon
+        if (teamData?.data?.hackathonId) {
+          setActiveHackathonId(teamData.data.hackathonId._id || teamData.data.hackathonId);
+        }
       } catch (err) {
-        console.error("Failed to fetch hackathons:", err);
+        console.error("Failed to fetch data:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchHackathons();
+    fetchData();
   }, []);
 
   const handleAction = (type, hackathon) => {
     switch (type) {
-      case "CREATE_TEAM":
-        if (user?.teamId) return;
+      case "CREATE_TEAM": {
+        if (user?.status === "busy") {
+          addToast("Your status is 'Busy'. Update it to 'Open' in your profile first.", "warning");
+          return;
+        }
+        const alreadyIn = activeHackathonId && activeHackathonId.toString() === hackathon._id.toString();
+        if (alreadyIn) {
+          addToast("You are already in a team for this hackathon.", "warning");
+          return;
+        }
         navigate("/team-builder", { state: { hackathonId: hackathon._id, hackathonName: hackathon.name } });
         break;
+      }
       case "VIEW_DETAILS":
         navigate(`/hackathon/${hackathon._id}`);
         break;
@@ -86,7 +106,10 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {displayHackathons.map((hack) => {
             const isLive = new Date(hack.startDate) <= now && new Date(hack.endDate) >= now;
-            const isParticipating = !!user?.teamId;
+            // Per-hackathon: user already in a team for THIS specific hackathon
+            const isParticipating = activeHackathonId && activeHackathonId.toString() === hack._id.toString();
+            const isBusy = user?.status === "busy";
+            const canCreate = !isParticipating && !isBusy;
             return (
               <div
                 key={hack._id}
@@ -117,14 +140,17 @@ const Dashboard = () => {
                 <div className="flex gap-3 mt-4">
                   <button
                     onClick={() => handleAction("CREATE_TEAM", hack)}
-                    disabled={isParticipating}
+                    disabled={!canCreate}
+                    title={isParticipating ? "Already in a team for this hackathon" : isBusy ? "Set status to Open first" : ""}
                     className={`px-3 py-2 rounded-lg text-sm transition ${
-                      isParticipating 
-                        ? "bg-gray-700 text-gray-400 cursor-not-allowed border border-gray-600" 
+                      isParticipating
+                        ? "bg-gray-700 text-gray-400 cursor-not-allowed border border-gray-600"
+                        : isBusy
+                        ? "bg-yellow-900/40 text-yellow-500 cursor-not-allowed border border-yellow-700/40"
                         : "bg-green-600 hover:bg-green-500 text-white"
                     }`}
                   >
-                    {isParticipating ? "Participated" : "Create Team"}
+                    {isParticipating ? "✅ Participating" : isBusy ? "⏳ Busy" : "Create Team"}
                   </button>
                   <button
                     onClick={() => handleAction("VIEW_DETAILS", hack)}
