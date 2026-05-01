@@ -20,6 +20,11 @@ const corsOptions = {
             }
         }
 
+        // Allow any Netlify subdomain (previews, branch deploys, etc.)
+        if (origin && origin.endsWith(".netlify.app")) {
+            return callback(null, true);
+        }
+
         if (allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
