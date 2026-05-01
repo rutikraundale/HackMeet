@@ -293,7 +293,7 @@ const Projects = () => {
                 return (
                   <div key={m._id} className="flex items-center gap-3 min-h-[44px]">
                     {m.profilePicture ? (
-                      <img src={m.profilePicture} alt={m.username} className="w-8 h-8 rounded-lg object-cover shrink-0" />
+                      <img loading="lazy" src={m.profilePicture} alt={m.username} className="w-8 h-8 rounded-lg object-cover shrink-0" />
                     ) : (
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0" style={{ backgroundColor: color, color: "#fff" }}>
                         {initials}
@@ -317,7 +317,7 @@ const Projects = () => {
                 return (
                   <div key={`pending-${m._id}`} className="flex items-center gap-3 opacity-60 min-h-[44px]">
                     {m.profilePicture ? (
-                      <img src={m.profilePicture} alt={m.username} className="w-8 h-8 rounded-lg object-cover grayscale shrink-0" />
+                      <img loading="lazy" src={m.profilePicture} alt={m.username} className="w-8 h-8 rounded-lg object-cover grayscale shrink-0" />
                     ) : (
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold grayscale shrink-0" style={{ backgroundColor: color, color: "#fff" }}>
                         {initials}

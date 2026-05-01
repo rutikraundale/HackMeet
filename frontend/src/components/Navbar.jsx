@@ -78,7 +78,7 @@ const Navbar = ({ onMenuOpen }) => {
           className="w-9 h-9 min-w-[44px] min-h-[44px] rounded-full bg-blue-500 flex items-center justify-center hover:bg-blue-600 transition overflow-hidden"
         >
           {user?.profilePicture ? (
-            <img src={user.profilePicture} alt="profile" className="w-full h-full object-cover" />
+            <img loading="lazy" src={user.profilePicture} alt="profile" className="w-full h-full object-cover" />
           ) : (
             <UserIcon className="h-5 w-5 text-white" />
           )}

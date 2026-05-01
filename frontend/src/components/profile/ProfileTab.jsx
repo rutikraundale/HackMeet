@@ -22,13 +22,13 @@ const ProfileTab = ({
               <div className="mb-6 flex flex-col items-center relative group">
                 <div className="relative w-32 h-32 rounded-2xl overflow-hidden border-2 border-slate-600 shadow-lg bg-slate-900 flex items-center justify-center">
                   {editData.profilePic ? (
-                    <img
+                    <img loading="lazy"
                       src={editData.profilePic}
                       alt="profile preview"
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <img
+                    <img loading="lazy"
                       src={user.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&size=128`}
                       alt="current profile"
                       className="w-full h-full object-cover opacity-50"
@@ -57,7 +57,7 @@ const ProfileTab = ({
                 </button>
               </div>
             ) : (
-              <img
+              <img loading="lazy"
                 src={user.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&size=128`}
                 alt="profile"
                 className="w-32 h-32 rounded-2xl mb-4 object-cover shadow-lg border border-slate-700"

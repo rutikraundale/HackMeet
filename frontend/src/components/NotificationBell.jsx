@@ -75,7 +75,7 @@ const NotificationBell = () => {
 									onClick={() => handleNotificationClick(n)}
 								>
 									<div className="relative shrink-0">
-										<img
+										<img loading="lazy"
 											src={n.sender?.profilePic || n.sender?.profilePicture || "/default-avatar.png"}
 											alt=""
 											className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover border border-slate-600"

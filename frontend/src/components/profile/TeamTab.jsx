@@ -230,7 +230,7 @@ const TeamTab = () => {
                 className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center gap-4 hover:border-slate-600 transition relative group"
               >
                 {member.profilePicture ? (
-                   <img src={member.profilePicture} alt={member.username} className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                   <img loading="lazy" src={member.profilePicture} alt={member.username} className="w-10 h-10 rounded-lg object-cover shrink-0" />
                 ) : (
                    <div
                      className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0"
@@ -294,7 +294,7 @@ const TeamTab = () => {
                 className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex items-center gap-4"
               >
                 {reqUser.profilePicture ? (
-                  <img src={reqUser.profilePicture} alt={reqUser.username} className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                  <img loading="lazy" src={reqUser.profilePicture} alt={reqUser.username} className="w-10 h-10 rounded-lg object-cover shrink-0" />
                 ) : (
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0 bg-blue-900/50">
                     {(reqUser.username || "??").slice(0,2).toUpperCase()}

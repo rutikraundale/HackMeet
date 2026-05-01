@@ -82,7 +82,7 @@ const UsersProfile = () => {
         {/* PROFILE CARD */}
         <div className="bg-gray-900 p-6 rounded-xl border border-gray-800">
           {profile.profilePicture ? (
-            <img
+            <img loading="lazy"
               src={profile.profilePicture}
               alt={profile.username}
               className="w-24 h-24 rounded-xl mb-4 object-cover"

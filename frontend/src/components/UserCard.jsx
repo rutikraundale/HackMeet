@@ -19,7 +19,7 @@ const UserCard = ({ user, compatibility, onInvite, isInvited, isFull }) => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
           {user.profilePicture ? (
-            <img src={user.profilePicture} alt={user.name} className="w-14 h-14 rounded-lg object-cover" />
+            <img loading="lazy" src={user.profilePicture} alt={user.name} className="w-14 h-14 rounded-lg object-cover" />
           ) : (
             <div
               className="w-14 h-14 rounded-lg flex items-center justify-center text-white font-bold text-lg"

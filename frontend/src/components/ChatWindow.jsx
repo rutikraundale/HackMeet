@@ -74,7 +74,7 @@ const ChatWindow = ({ user, currentUserId, onMessageSent }) => {
       {/* Header */}
       <div className="border-b border-gray-700 p-3 flex items-center gap-3">
         {user.profilePicture ? (
-          <img src={user.profilePicture} alt="" className="w-8 h-8 rounded-full object-cover" />
+          <img loading="lazy" src={user.profilePicture} alt="" className="w-8 h-8 rounded-full object-cover" />
         ) : (
           <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">
             {(user.username || "?").slice(0, 2).toUpperCase()}

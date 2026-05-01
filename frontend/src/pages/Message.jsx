@@ -125,7 +125,7 @@ const Message = () => {
                     className="p-2 hover:bg-gray-700 cursor-pointer rounded flex items-center gap-3 min-h-[44px]"
                   >
                     {u.profilePicture ? (
-                      <img src={u.profilePicture} alt="" className="w-8 h-8 rounded-full object-cover" />
+                      <img loading="lazy" src={u.profilePicture} alt="" className="w-8 h-8 rounded-full object-cover" />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold">
                         {(u.username || "?").slice(0, 2).toUpperCase()}
@@ -169,7 +169,7 @@ const Message = () => {
               }`}
             >
               {conv.user?.profilePicture ? (
-                <img src={conv.user.profilePicture} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
+                <img loading="lazy" src={conv.user.profilePicture} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold shrink-0">
                   {(conv.user?.username || "?").slice(0, 2).toUpperCase()}

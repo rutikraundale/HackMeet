@@ -323,7 +323,7 @@ const TeamBuilder = () => {
                   <div key={dev._id} className="bg-slate-800 border border-slate-700 rounded-xl p-6">
                     <div className="flex items-center gap-4 mb-4">
                       {dev.profilePicture ? (
-                        <img src={dev.profilePicture} alt={dev.username} className="w-12 h-12 rounded-lg object-cover" />
+                        <img loading="lazy" src={dev.profilePicture} alt={dev.username} className="w-12 h-12 rounded-lg object-cover" />
                       ) : (
                         <div
                           className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold"
