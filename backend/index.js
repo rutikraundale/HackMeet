@@ -37,6 +37,13 @@ app.get("/", (req, res) => {
     res.json({ success: true, message: "HackMeet API is running 🚀" });
 });
 
+app.post('/api/telegram/webhook', (req, res) => {
+    console.log("Message received from Telegram:", req.body);
+    
+    // Telegram needs a 200 OK response immediately
+    res.status(200).send('ok');
+});
+
 // ── 404 handler ───────────────────────────────────────────────────────────────
 app.use((req, res) => {
     res.status(404).json({ success: false, message: "Route not found." });
@@ -54,7 +61,7 @@ app.use((err, req, res, next) => {
 // ── Start server ──────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
-    server.listen(PORT, () => {
+    server.listen(PORT, "0.0.0.0", () => {
         console.log(`✅  Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`);
     });
 });
