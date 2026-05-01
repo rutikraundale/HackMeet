@@ -18,10 +18,9 @@ dotenv.config();
 
 // ── Global Middleware ─────────────────────────────────────────────────────────
 app.use(corsMiddleware);
-app.options("*", corsMiddleware); // Handle preflight requests for all routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());            // Parses Cookie header → req.cookies
+app.use(cookieParser());
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
