@@ -28,14 +28,14 @@ const generateTokensAndSetCookies = (res, userId) => {
     res.cookie("accessToken", accessToken, {
         httpOnly: true,          // Not accessible via document.cookie
         secure: isProd,          // HTTPS only in production
-        sameSite: "strict",      // CSRF protection
+        sameSite: "none",      // CSRF protection
         maxAge: 15 * 60 * 1000  // 15 min in ms
     });
 
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: isProd,
-        sameSite: "strict",
+        sameSite: "none",
         maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days in ms
     });
 
