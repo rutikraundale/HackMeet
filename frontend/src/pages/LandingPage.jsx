@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Code, Users, Rocket, Shield, Globe, Zap, Menu, X, GithubIcon, TwitterIcon, LinkedinIcon } from "lucide-react";
+import { Code, Users, Rocket, Shield, Globe, Zap, Menu, X, Github, Twitter, Linkedin } from "lucide-react";
 export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -16,7 +16,7 @@ export default function LandingPage() {
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center z-[100]">
-        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-3xl animate-pulse mb-6 shadow-[0_0_30px_rgba(37,99,235,0.5)]">
+        <div className="w-16 h-16 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-3xl animate-pulse mb-6 shadow-[0_0_30px_rgba(37,99,235,0.5)]">
           H
         </div>
         <div className="flex items-center gap-2">
