@@ -38,13 +38,18 @@ const Navbar = ({ onMenuOpen }) => {
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Logo */}
-        <div className="flex items-center gap-2 text-white">
-          <div className="border border-white px-2 py-1 text-sm font-bold">▶</div>
-          <span className="font-bold text-lg tracking-wider">
-            HACKMEET
-          </span>
-        </div>
+       {/* Logo Container */}
+  <div 
+    className="flex items-center gap-2 text-white cursor-pointer" 
+    onClick={() => navigate("/")}
+  >
+    {/* Replace the border box with this img tag */}
+    <img 
+      src="/hackmeetlogo.png" 
+      alt="HackMeet Logo" 
+      className="w-8 h-8 object-contain" 
+    />
+  </div>
 
         {/* Search — hidden on mobile, visible sm+ */}
         <div className="hidden sm:flex items-center bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 w-48 md:w-64 focus-within:border-blue-500 transition">
