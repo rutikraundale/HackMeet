@@ -3,6 +3,8 @@ import cors from "cors";
 const allowedOrigins = [
     process.env.CLIENT_URL,
     "https://hackmeetdotcom.netlify.app/",
+    "https://hack-meet-ten.vercel.app/",
+    "https://hack-meet-rutikraundale5-2433s-projects.vercel.app/",
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:3000",
