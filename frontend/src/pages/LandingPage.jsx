@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Code, Users, Rocket, Shield, Globe, Zap, Menu, X, Github, Twitter, Linkedin } from "lucide-react";
-
+import { Code, Users, Rocket, Shield, Globe, Zap, Menu, X, GithubIcon, TwitterIcon, LinkedinIcon } from "lucide-react";
 export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
