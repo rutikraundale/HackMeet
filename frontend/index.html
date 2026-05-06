@@ -1,13 +1,52 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hack Meet</title>
+    <meta charset="utf-8" />
+    <title>HackMeet</title>
+    <style>
+      /* This CSS runs instantly before JS is even parsed */
+      .pre-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #0f172a; /* Match your app's theme */
+        color: white;
+        font-family: sans-serif;
+        z-index: 9999;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top: 4px solid #3b82f6; /* Blue accent */
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 15px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+
+    <div id="root">
+      <!-- Everything inside here is replaced by React once it loads -->
+      <div class="pre-loader">
+        <div class="spinner"></div>
+        <p>Waking up the server...</p>
+      </div>
+    </div>
+
   </body>
 </html>
